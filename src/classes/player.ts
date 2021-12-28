@@ -23,6 +23,9 @@ export class Player extends Actor {
     this.keyDown = this.scene.input.keyboard.addKey("DOWN");
     this.keyRight = this.scene.input.keyboard.addKey("RIGHT");
 
+    // PHYSICS
+    this.getBody().setSize(16, 16);
+
     // ANIMATIONS
     this.initAnimations();
   }
@@ -56,7 +59,7 @@ export class Player extends Actor {
       key: "move-down",
       frames: this.scene.anims.generateFrameNames("astronaut", {
         prefix: "move-down-",
-        end: 4,
+        end: 3,
       }),
       frameRate: 4,
     });
@@ -65,7 +68,7 @@ export class Player extends Actor {
       key: "move-up",
       frames: this.scene.anims.generateFrameNames("astronaut", {
         prefix: "move-up-",
-        end: 4,
+        end: 3,
       }),
       frameRate: 4,
     });
@@ -74,7 +77,7 @@ export class Player extends Actor {
       key: "move-side",
       frames: this.scene.anims.generateFrameNames("astronaut", {
         prefix: "move-side-",
-        end: 4,
+        end: 3,
       }),
       frameRate: 4,
     });
@@ -83,7 +86,7 @@ export class Player extends Actor {
       key: "stay-down",
       frames: this.scene.anims.generateFrameNames("astronaut", {
         prefix: "stay-down-",
-        end: 2,
+        end: 1,
       }),
       frameRate: 4,
     });
