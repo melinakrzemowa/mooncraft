@@ -39,7 +39,7 @@ export class Player extends Actor {
     } else if (this.keyA?.isDown || this.keyLeft?.isDown) {
       this.body.velocity.x = -20;
       this.checkFlip();
-      this.getBody().setOffset(48, 15);
+      this.getBody().setOffset(16, 0);
       this.anims.play("move-side", true);
     } else if (this.keyS?.isDown || this.keyDown?.isDown) {
       this.body.velocity.y = 20;
@@ -47,7 +47,7 @@ export class Player extends Actor {
     } else if (this.keyD?.isDown || this.keyRight?.isDown) {
       this.body.velocity.x = 20;
       this.checkFlip();
-      this.getBody().setOffset(15, 15);
+      this.getBody().setOffset(0, 0);
       this.anims.play("move-side", true);
     } else {
       this.anims.play("stay-down", true);
