@@ -42,7 +42,7 @@ export class Player extends Actor {
       this.body.velocity.x = -20;
       this.body.velocity.y = 20;
       this.checkFlip();
-      this.getBody().setOffset(0, 0);
+      this.getBody().setOffset(16, 0);
       this.anims.play("move-down", true);
     } else if (this.keyRight?.isDown && this.keyUp?.isDown) {
       this.body.velocity.x = 20;
@@ -54,7 +54,7 @@ export class Player extends Actor {
       this.body.velocity.x = -20;
       this.body.velocity.y = -20;
       this.checkFlip();
-      this.getBody().setOffset(0, 0);
+      this.getBody().setOffset(16, 0);
       this.anims.play("move-up", true);
     } else if (this.keyW?.isDown || this.keyUp?.isDown) {
       this.body.velocity.y = -20;
