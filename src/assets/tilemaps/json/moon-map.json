@@ -36,7 +36,7 @@
         {
          "columns":6,
          "firstgid":1,
-         "image":"..\/..\/..\/..\/..\/..\/..\/..\/Desktop\/moon-ground.png",
+         "image":"..\/tiles\/moon-ground.png",
          "imageheight":80,
          "imagewidth":96,
          "margin":0,
@@ -49,7 +49,7 @@
         {
          "columns":6,
          "firstgid":31,
-         "image":"..\/..\/..\/..\/..\/..\/..\/..\/Desktop\/moon-craters.png",
+         "image":"..\/tiles\/moon-craters.png",
          "imageheight":80,
          "imagewidth":96,
          "margin":0,
