@@ -16,7 +16,7 @@ export class Moon extends Scene {
 
   create(): void {
     this.initMap();
-    this.player = new Player(this, 850, 750);
+    this.player = new Player(this, 400, 400);
     this.physics.add.collider(this.player, this.cratersLayer);
     this.initCamera();
   }

@@ -4,8 +4,8 @@ import { LoadingScene, Moon } from "./scenes";
 const gameConfig: Types.Core.GameConfig = {
   title: "Phaser game tutorial",
   type: Phaser.AUTO,
-  width: 1920,
-  height: 1080,
+  width: 1760,
+  height: 1440,
   parent: "game",
   backgroundColor: "#adacb9",
   physics: {
