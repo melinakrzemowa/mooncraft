@@ -6,3 +6,6 @@ run project: `yarn start`
 it is running on: http://localhost:6969/
 
 EXPLORE THE MOON!
+
+build: `yarn build`  
+game files will be in `dist` folder  
