@@ -10,5 +10,4 @@ EXPLORE THE MOON!
 build: `yarn build`  
 game files will be in `dist` folder  
 
-Map creating:
-https://www.mapeditor.org/
+Map creating: "Tiled" from https://www.mapeditor.org/  

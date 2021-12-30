@@ -1,27 +1,23 @@
-import { GameObjects, Scene, Physics } from "phaser";
+import { GameObjects, Scene, Tilemaps } from "phaser";
 import { Player } from "../../classes/player";
 import { throws } from "assert";
 
 export class Moon extends Scene {
   private player!: GameObjects.Sprite;
-  private craters!: Physics.Arcade.StaticGroup;
-  private singleTestCrater!: GameObjects.Sprite;
+  private map!: Tilemaps.Tilemap;
+  private groundTileset!: Tilemaps.Tileset;
+  private cratersTileset!: Tilemaps.Tileset;
+  private groundLayer!: Tilemaps.TilemapLayer;
+  private cratersLayer!: Tilemaps.TilemapLayer;
 
   constructor() {
     super("moon-scene");
   }
 
   create(): void {
-    this.player = new Player(this, 88, 72);
-
-    this.singleTestCrater = this.add.sprite(30, 40, "crater-001");
-
-    this.craters = this.physics.add.staticGroup();
-    this.craters.create(120, 120, "crater-001");
-    this.craters.add(this.singleTestCrater);
-
-    this.physics.add.collider(this.player, this.craters);
-
+    this.initMap();
+    this.player = new Player(this, 850, 750);
+    this.physics.add.collider(this.player, this.cratersLayer);
     this.initCamera();
   }
 
@@ -31,5 +27,18 @@ export class Moon extends Scene {
 
   private initCamera(): void {
     this.cameras.main.startFollow(this.player, false);
+  }
+
+  private initMap(): void {
+    this.map = this.make.tilemap({
+      key: "moon-map",
+      tileWidth: 16,
+      tileHeight: 16,
+    });
+    this.groundTileset = this.map.addTilesetImage("moon-ground", "moon-ground"); // (file-name, tileset-name-from-Tiled)
+    this.cratersTileset = this.map.addTilesetImage("moon-craters", "moon-craters");
+    this.groundLayer = this.map.createLayer("ground", this.groundTileset, 0, 0); // (layar-name-from-Tiled, Tileset)
+    this.cratersLayer = this.map.createLayer("craters", this.cratersTileset, 0, 0);
+    this.cratersLayer.setCollisionByProperty({ collides: true }); // custom property of Tileset in Tiled
   }
 }
