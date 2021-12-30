@@ -18,7 +18,7 @@ const gameConfig: Types.Core.GameConfig = {
     antialiasGL: false,
     pixelArt: true,
   },
-  canvasStyle: `display: block; width: 100%; height: 100%;`,
+  canvasStyle: `display: block; max-width: 100vw; max-height: 100vh; margin: auto;`,
   autoFocus: true,
   audio: {
     disableWebAudio: false,
