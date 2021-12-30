@@ -18,6 +18,10 @@ export class LoadingScene extends Scene {
       key: "moon-craters",
       url: "tilemaps/tiles/moon-craters.png",
     });
+    this.load.image({
+      key: "lander",
+      url: "tilemaps/tiles/lander.png",
+    });
     this.load.tilemapTiledJSON("moon-map", "tilemaps/json/moon-map.json");
   }
 

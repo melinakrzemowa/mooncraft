@@ -7,8 +7,10 @@ export class Moon extends Scene {
   private map!: Tilemaps.Tilemap;
   private groundTileset!: Tilemaps.Tileset;
   private cratersTileset!: Tilemaps.Tileset;
+  private landerTileset!: Tilemaps.Tileset;
   private groundLayer!: Tilemaps.TilemapLayer;
   private cratersLayer!: Tilemaps.TilemapLayer;
+  private landerLayer!: Tilemaps.TilemapLayer;
 
   constructor() {
     super("moon-scene");
@@ -18,6 +20,7 @@ export class Moon extends Scene {
     this.initMap();
     this.player = new Player(this, 400, 400);
     this.physics.add.collider(this.player, this.cratersLayer);
+    this.physics.add.collider(this.player, this.landerLayer);
     this.initCamera();
   }
 
@@ -38,8 +41,11 @@ export class Moon extends Scene {
     });
     this.groundTileset = this.map.addTilesetImage("moon-ground", "moon-ground"); // (file-name, tileset-name-from-Tiled)
     this.cratersTileset = this.map.addTilesetImage("moon-craters", "moon-craters");
+    this.landerTileset = this.map.addTilesetImage("lander", "lander");
     this.groundLayer = this.map.createLayer("ground", this.groundTileset, 0, 0); // (layar-name-from-Tiled, Tileset)
     this.cratersLayer = this.map.createLayer("craters", this.cratersTileset, 0, 0);
     this.cratersLayer.setCollisionByProperty({ collides: true }); // custom property of Tileset in Tiled
+    this.landerLayer = this.map.createLayer("lander", this.landerTileset, 0, 0);
+    this.landerLayer.setCollisionByProperty({ collides: true }); // custom property of Tileset in Tiled
   }
 }
