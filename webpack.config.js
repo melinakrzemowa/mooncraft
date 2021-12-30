@@ -93,7 +93,7 @@ const config = {
     static: {
       directory: path.join(__dirname, "dist"),
     },
-    port: 5000,
+    port: 6969,
     hot: true,
   },
 };
