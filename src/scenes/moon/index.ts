@@ -1,9 +1,11 @@
-import { GameObjects, Scene, Tilemaps } from "phaser";
+import { GameObjects, Scene, Tilemaps, Physics } from "phaser";
 import { Player } from "../../classes/player";
 import { throws } from "assert";
 
 export class Moon extends Scene {
   private player!: GameObjects.Sprite;
+  private npc!: GameObjects.Sprite;
+  private npcs!: Physics.Arcade.StaticGroup;
   private map!: Tilemaps.Tilemap;
   private groundTileset!: Tilemaps.Tileset;
   private cratersTileset!: Tilemaps.Tileset;
@@ -19,6 +21,25 @@ export class Moon extends Scene {
   create(): void {
     this.initMap();
     this.player = new Player(this, 400, 400);
+
+    // TEST NPC ONCLICK
+    this.npc = this.add.sprite(368, 416, "astronaut");
+    this.npc.setInteractive();
+    this.npc.on("pointerdown", function () {
+      console.log("NPC click");
+    });
+    this.npc.anims.create({
+      key: "stay-down",
+      frames: this.npc.anims.generateFrameNames("astronaut", {
+        prefix: "stay-down-",
+        end: 3,
+      }),
+      frameRate: 4,
+    });
+    this.npcs = this.physics.add.staticGroup();
+    this.npcs.add(this.npc);
+    this.physics.add.collider(this.player, this.npcs);
+
     this.physics.add.collider(this.player, this.cratersLayer);
     this.physics.add.collider(this.player, this.landerLayer);
     this.initCamera();
@@ -26,6 +47,8 @@ export class Moon extends Scene {
 
   update(): void {
     this.player.update();
+
+    this.npc.anims.play("stay-down", true);
   }
 
   private initCamera(): void {
@@ -47,5 +70,10 @@ export class Moon extends Scene {
     this.cratersLayer.setCollisionByProperty({ collides: true }); // custom property of Tileset in Tiled
     this.landerLayer = this.map.createLayer("lander", this.landerTileset, 0, 0);
     this.landerLayer.setCollisionByProperty({ collides: true }); // custom property of Tileset in Tiled
+
+    // this.landerLayer.on("pointerdown", function (pointer: any) {
+    //   console.log("test");
+    //   this.setTint(0xff0000);
+    // });
   }
 }
