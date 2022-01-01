@@ -27,8 +27,9 @@ export class Moon extends Scene {
     // TEST NPC ONCLICK ( TODO : should be done as separated class)
     this.npc = this.add.sprite(368, 416, "astronaut");
     this.npc.setInteractive();
-    this.npc.on("pointerdown", function () {
+    this.npc.on("pointerdown", () => {
       console.log("NPC click");
+      this.cameras.main.flash();
     });
     this.npc.anims.create({
       key: "stay-down",
