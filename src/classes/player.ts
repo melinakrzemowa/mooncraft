@@ -24,7 +24,6 @@ export class Player extends Actor {
     this.keyRight = this.scene.input.keyboard.addKey("RIGHT");
 
     // PHYSICS
-    // this.getBody().setSize(16, 16);
     this.setCircle(8);
 
     // ANIMATIONS

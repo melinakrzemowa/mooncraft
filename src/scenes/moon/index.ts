@@ -1,6 +1,5 @@
 import { GameObjects, Scene, Tilemaps, Physics } from "phaser";
 import { Player } from "../../classes/player";
-import { throws } from "assert";
 
 export class Moon extends Scene {
   private player!: GameObjects.Sprite;
@@ -14,6 +13,7 @@ export class Moon extends Scene {
   private cratersLayer!: Tilemaps.TilemapLayer;
   private landerLayer!: Tilemaps.TilemapLayer;
   private landerHoverLayer!: Tilemaps.TilemapLayer;
+  private pointer: any;
 
   constructor() {
     super("moon-scene");
@@ -21,6 +21,7 @@ export class Moon extends Scene {
 
   create(): void {
     this.initMap();
+    this.pointer = this.add.circle(0, 0, 4, 0x6666ff);
     this.player = new Player(this, 400, 400);
     this.initMapHoverLayers();
 
@@ -43,6 +44,11 @@ export class Moon extends Scene {
     this.npcs.add(this.npc);
     this.physics.add.collider(this.player, this.npcs);
 
+    this.input.on("pointerdown", (pointer: any, gameObject: any) => {
+      this.pointer.x = pointer.worldX;
+      this.pointer.y = pointer.worldY;
+    });
+
     this.physics.add.collider(this.player, this.cratersLayer);
     this.physics.add.collider(this.player, this.landerLayer);
     this.initCamera();
@@ -50,7 +56,6 @@ export class Moon extends Scene {
 
   update(): void {
     this.player.update();
-
     this.npc.anims.play("stay-down", true);
   }
 
