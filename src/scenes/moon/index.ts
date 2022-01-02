@@ -22,8 +22,7 @@ export class Moon extends Scene {
   create(): void {
     this.initMap();
     this.pointer = this.add.circle(0, 0, 4, 0x6666ff);
-    this.player = new Player(this, 400, 400);
-    this.initMapHoverLayers();
+    this.player = new Player(this, 408, 408);
 
     // TEST NPC ONCLICK ( TODO : should be done as separated class)
     this.npc = this.add.sprite(368, 416, "astronaut");
@@ -77,24 +76,8 @@ export class Moon extends Scene {
     this.cratersLayer = this.map.createLayer("craters", this.cratersTileset, 0, 0);
     this.cratersLayer.setCollisionByProperty({ collides: true }); // custom property of Tileset in Tiled
     this.landerLayer = this.map.createLayer("lander", this.landerTileset, 0, 0);
-    this.landerLayer.setCollisionByProperty({ collides: true }); // custom property of Tileset in Tiled
-
-    // TODO : onclick only existing elements - now triggers everything (layer is everywhere - also empty)
-    // this.landerLayer.setInteractive();
-    // this.landerLayer.on("pointerdown", (pointer: Object, x: number, y: number, stopPropagation: Object) => {
-    //   // console.log("This is Lander", pointer); // .downX/.downY
-    //   // console.log("x: ", x);
-    //   // console.log("y: ", y);
-    //   console.log("ddd: ", this);
-    // });
-  }
-
-  private initMapHoverLayers(): void {
-    this.map = this.make.tilemap({
-      key: "moon-map",
-      tileWidth: 16,
-      tileHeight: 16,
-    });
+    this.landerLayer.setCollisionByProperty({ collides: true });
     this.landerHoverLayer = this.map.createLayer("lander-hover", this.landerTileset, 0, 0);
+    this.landerHoverLayer.setDepth(2);
   }
 }
