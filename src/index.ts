@@ -1,5 +1,6 @@
 import { Game, Types } from "phaser";
 import { LoadingScene, Moon } from "./scenes";
+import GridEngine from "grid-engine";
 
 const gameConfig: Types.Core.GameConfig = {
   title: "Phaser game tutorial",
@@ -11,7 +12,8 @@ const gameConfig: Types.Core.GameConfig = {
   physics: {
     default: "arcade",
     arcade: {
-      debug: false,
+      // debug: false,
+      debug: true,
     },
   },
   render: {
@@ -24,6 +26,15 @@ const gameConfig: Types.Core.GameConfig = {
     disableWebAudio: false,
   },
   scene: [LoadingScene, Moon],
+  plugins: {
+    scene: [
+      {
+        key: "gridEngine",
+        plugin: GridEngine,
+        mapping: "gridEngine",
+      },
+    ],
+  },
 };
 
 window.game = new Game(gameConfig);
