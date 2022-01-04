@@ -23,7 +23,7 @@ export class Moon extends Scene {
   create(): void {
     this.initMap();
     this.pointer = this.add.circle(0, 0, 4, 0x6666ff);
-    this.player = new Player(this, 408, 408);
+    this.player = new Player(this);
 
     // TEST NPC ONCLICK ( TODO : should be done as separated class)
     this.npc = this.add.sprite(368, 416, "astronaut");
@@ -50,11 +50,8 @@ export class Moon extends Scene {
         {
           id: "player",
           sprite: this.player,
-          walkingAnimationMapping: 6,
           startPosition: { x: 25, y: 25 },
           speed: 1,
-          offsetX: 8,
-          offsetY: 8,
         },
         // {
         //   id: "npc",
@@ -140,6 +137,9 @@ export class Moon extends Scene {
     this.landerLayer.setCollisionByProperty({ collides: true });
     this.landerHoverLayer = this.map.createLayer("lander-hover", this.landerTileset, 0, 0);
     this.landerHoverLayer.setDepth(2);
+
+    // adding a visible grid for testing purposes
+    this.add.grid(0, 0, 16*100, 16*100, 16, 16, 0x010101, 0.4);
 
     // this.map.layers.forEach((layer, index) => {
     //   this.map.createLayer(index, "tileset", 0, 0);

@@ -10,8 +10,8 @@ export class Player extends Actor {
   private keyDown: Phaser.Input.Keyboard.Key;
   private keyRight: Phaser.Input.Keyboard.Key;
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, "astronaut");
+  constructor(scene: Phaser.Scene) {
+    super(scene, 0, 0, "astronaut");
 
     // KEYS
     this.keyW = this.scene.input.keyboard.addKey("W");
@@ -73,6 +73,7 @@ export class Player extends Actor {
         end: 3,
       }),
       frameRate: 4,
+      repeat: -1,
     });
 
     this.scene.anims.create({
@@ -82,6 +83,7 @@ export class Player extends Actor {
         end: 3,
       }),
       frameRate: 4,
+      repeat: -1,
     });
 
     this.scene.anims.create({
@@ -91,6 +93,7 @@ export class Player extends Actor {
         end: 3,
       }),
       frameRate: 4,
+      repeat: -1,
     });
 
     this.scene.anims.create({
@@ -100,6 +103,7 @@ export class Player extends Actor {
         end: 3,
       }),
       frameRate: 4,
+      repeat: -1,
     });
 
     this.scene.anims.create({
@@ -109,6 +113,7 @@ export class Player extends Actor {
         end: 1,
       }),
       frameRate: 4,
+      repeat: -1,
     });
   }
 }
