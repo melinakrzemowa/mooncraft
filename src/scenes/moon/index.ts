@@ -44,6 +44,7 @@ export class Moon extends Scene {
     // this.npcs = this.physics.add.staticGroup();
     // this.npcs.add(this.npc);
     // this.physics.add.collider(this.player, this.npcs);
+
     const gridEngineConfig = {
       collisionTilePropertyName: "collides",
       characters: [
@@ -53,41 +54,54 @@ export class Moon extends Scene {
           startPosition: { x: 25, y: 25 },
           speed: 1,
         },
-        // {
-        //   id: "npc",
-        //   sprite: this.npc,
-        //   walkingAnimationMapping: 6,
-        //   startPosition: { x: 24, y: 25 },
-        //   speed: 1,
-        //   offsetX: 8,
-        //   offsetY: 8,
-        // },
       ],
     };
+
+    const npcs : Map<string, any> = new Map<string, any>();
+
+    for (let x = 35; x <= 40; x++) {
+      for (let y = 25; y <= 30; y++) {
+        const spr = this.add.sprite(0, 0, "astronaut");
+        npcs.set(`npc${x}#${y}`, spr);
+
+        gridEngineConfig.characters.push({
+          id: `npc${x}#${y}`,
+          sprite: spr,
+          startPosition: { x, y },
+          speed: 1,
+        });
+      }
+    }
+
     console.log("create: ", this.map);
     this.gridEngine.create(this.map, gridEngineConfig);
 
-    // this.gridEngine.moveRandomly("npc", 5000, 4);
+    for (let x = 35; x <= 40; x++) {
+      for (let y = 25; y <= 30; y++) {
+        this.gridEngine.moveRandomly(`npc${x}#${y}`, this.getRandomInt(0, 1500));
+      }
+    }
 
-    this.gridEngine.movementStarted().subscribe(({ direction }: any) => {
-      console.log("movementStarted");
-      console.log(direction);
-      this.player.anims.play(direction);
+    this.gridEngine.movementStarted().subscribe(({ charId, direction }: any) => {
+      if (charId == "player") {
+        this.player.anims.play(direction);
+      } else {
+        npcs.get(charId).anims.play(direction);
+      }
     });
 
-    this.gridEngine.movementStopped().subscribe(({ direction }: any) => {
-      console.log("movementStopped");
-
-      this.player.anims.stop();
-      // this.player.setFrame("stay-down-1");
-      this.player.anims.play("stay-down");
+    this.gridEngine.movementStopped().subscribe(({ charId, direction }: any) => {
+      if (charId == "player") {
+        this.player.anims.stop();
+        this.player.anims.play("stay-down");
+      }
     });
 
-    this.gridEngine.directionChanged().subscribe(({ direction }: any) => {
-      console.log("directionChanged");
+    this.gridEngine.directionChanged().subscribe(({ charId, direction }: any) => {
+      if (charId == "player") {
+        this.player.anims.play("stay-down");
+      }
 
-      // this.player.setFrame("stay-down-1");
-      this.player.anims.play("stay-down");
     });
 
     // Pointer
@@ -146,5 +160,11 @@ export class Moon extends Scene {
     // this.map.layers.forEach((layer, index) => {
     //   this.map.createLayer(index, "tileset", 0, 0);
     // });
+  }
+
+  getRandomInt(min: integer, max: integer) : integer {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 }
