@@ -94,6 +94,8 @@ export class Moon extends Scene {
     this.input.on("pointerdown", (pointer: any, gameObject: any) => {
       this.pointer.x = pointer.worldX;
       this.pointer.y = pointer.worldY;
+
+      this.gridEngine.moveTo("player", { x: Math.floor(pointer.worldX / 16), y: Math.floor(pointer.worldY / 16) });
     });
 
     this.physics.add.collider(this.player, this.cratersLayer);
