@@ -69,7 +69,6 @@ export class Player extends Actor {
       key: "down",
       frames: this.scene.anims.generateFrameNames("astronaut", {
         prefix: "move-down-",
-        // start: 0,
         end: 3,
       }),
       frameRate: 4,
@@ -89,7 +88,7 @@ export class Player extends Actor {
     this.scene.anims.create({
       key: "left",
       frames: this.scene.anims.generateFrameNames("astronaut", {
-        prefix: "move-side-",
+        prefix: "move-left-",
         end: 3,
       }),
       frameRate: 4,
@@ -99,7 +98,7 @@ export class Player extends Actor {
     this.scene.anims.create({
       key: "right",
       frames: this.scene.anims.generateFrameNames("astronaut", {
-        prefix: "move-side-",
+        prefix: "move-right-",
         end: 3,
       }),
       frameRate: 4,
