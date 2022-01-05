@@ -54,7 +54,7 @@ export class Moon extends Scene {
           id: "singleNpc",
           sprite: this.npc,
           startPosition: { x: 24, y: 24 },
-        }
+        },
       ],
     };
 
@@ -73,7 +73,6 @@ export class Moon extends Scene {
         });
       }
     }
-
 
     this.gridEngine.create(this.map, gridEngineConfig);
 
