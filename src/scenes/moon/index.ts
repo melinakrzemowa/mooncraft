@@ -27,23 +27,19 @@ export class Moon extends Scene {
 
     // TEST NPC ONCLICK ( TODO : should be done as separated class)
     this.npc = this.add.sprite(368, 416, "astronaut");
-    // this.npc.setInteractive();
-    // this.npc.on("pointerdown", () => {
-    //   console.log("NPC click");
-    //   this.cameras.main.flash();
-    //   this.player.anims.play("up");
-    // });
-    // this.npc.anims.create({
-    //   key: "stay-down",
-    //   frames: this.npc.anims.generateFrameNames("astronaut", {
-    //     prefix: "stay-down-",
-    //     end: 1,
-    //   }),
-    //   frameRate: 4,
-    // });
-    // this.npcs = this.physics.add.staticGroup();
-    // this.npcs.add(this.npc);
-    // this.physics.add.collider(this.player, this.npcs);
+    this.npc.setInteractive();
+    this.npc.on("pointerdown", () => {
+      console.log("NPC click");
+      this.cameras.main.flash();
+    });
+    this.npc.anims.create({
+      key: "stay-down",
+      frames: this.npc.anims.generateFrameNames("astronaut", {
+        prefix: "stay-down-",
+        end: 1,
+      }),
+      frameRate: 4,
+    });
 
     const gridEngineConfig = {
       collisionTilePropertyName: "collides",
@@ -54,10 +50,15 @@ export class Moon extends Scene {
           startPosition: { x: 25, y: 25 },
           speed: 1,
         },
+        {
+          id: "singleNpc",
+          sprite: this.npc,
+          startPosition: { x: 24, y: 24 },
+        }
       ],
     };
 
-    const npcs : Map<string, any> = new Map<string, any>();
+    const npcs: Map<string, any> = new Map<string, any>();
 
     for (let x = 35; x <= 40; x++) {
       for (let y = 25; y <= 30; y++) {
@@ -73,7 +74,7 @@ export class Moon extends Scene {
       }
     }
 
-    console.log("create: ", this.map);
+
     this.gridEngine.create(this.map, gridEngineConfig);
 
     for (let x = 35; x <= 40; x++) {
@@ -101,7 +102,6 @@ export class Moon extends Scene {
       if (charId == "player") {
         this.player.anims.play("stay-down");
       }
-
     });
 
     // Pointer
@@ -118,18 +118,7 @@ export class Moon extends Scene {
   }
 
   update(): void {
-    // this.player.update(this.gridEngine);
-
-    const cursors = this.input.keyboard.createCursorKeys();
-    if (cursors.left.isDown) {
-      this.gridEngine.move("player", "left");
-    } else if (cursors.right.isDown) {
-      this.gridEngine.move("player", "right");
-    } else if (cursors.up.isDown) {
-      this.gridEngine.move("player", "up");
-    } else if (cursors.down.isDown) {
-      this.gridEngine.move("player", "down");
-    }
+    this.player.update(this.gridEngine);
   }
 
   private initCamera(): void {
@@ -154,15 +143,10 @@ export class Moon extends Scene {
     this.landerHoverLayer = this.map.createLayer("lander-hover", this.landerTileset, 0, 0);
     this.landerHoverLayer.setDepth(2);
 
-    // adding a visible grid for testing purposes
-    this.add.grid(0, 0, 16*100, 16*100, 16, 16, 0x010101, 0.4);
-
-    // this.map.layers.forEach((layer, index) => {
-    //   this.map.createLayer(index, "tileset", 0, 0);
-    // });
+    // this.add.grid(0, 0, 16 * 100, 16 * 100, 16, 16, 0x010101, 0.4); // visible grid for testing purposes
   }
 
-  getRandomInt(min: integer, max: integer) : integer {
+  getRandomInt(min: integer, max: integer): integer {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;

@@ -32,36 +32,16 @@ export class Player extends Actor {
   }
 
   update(gridEngine: any): void {
-    // this.getBody().setVelocity(0);
-    // if (this.keyW?.isDown || this.keyUp?.isDown) {
-    //   this.body.velocity.y = -20;
-    //   this.anims.play("move-up", true);
-    // } else if (this.keyA?.isDown || this.keyLeft?.isDown) {
-    //   this.body.velocity.x = -20;
-    //   this.checkFlip();
-    //   this.getBody().setOffset(16, 0);
-    //   this.anims.play("move-side", true);
-    // } else if (this.keyS?.isDown || this.keyDown?.isDown) {
-    //   this.body.velocity.y = 20;
-    //   this.anims.play("move-down", true);
-    // } else if (this.keyD?.isDown || this.keyRight?.isDown) {
-    //   this.body.velocity.x = 20;
-    //   this.checkFlip();
-    //   this.getBody().setOffset(0, 0);
-    //   this.anims.play("move-side", true);
-    // } else {
-    //   this.anims.play("stay-down", true);
-    // }
-    // const cursors = this.scene.input.keyboard.createCursorKeys();
-    // if (cursors.left.isDown) {
-    //   gridEngine.move("player", "left");
-    // } else if (cursors.right.isDown) {
-    //   gridEngine.move("player", "right");
-    // } else if (cursors.up.isDown) {
-    //   gridEngine.move("player", "up");
-    // } else if (cursors.down.isDown) {
-    //   gridEngine.move("player", "down");
-    // }
+    const cursors = this.scene.input.keyboard.createCursorKeys();
+    if (cursors.left.isDown) {
+      gridEngine.move("player", "left");
+    } else if (cursors.right.isDown) {
+      gridEngine.move("player", "right");
+    } else if (cursors.up.isDown) {
+      gridEngine.move("player", "up");
+    } else if (cursors.down.isDown) {
+      gridEngine.move("player", "down");
+    }
   }
 
   private initAnimations(): void {
