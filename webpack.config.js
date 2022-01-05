@@ -87,6 +87,7 @@ const config = {
       filename: "index.html",
       inlineSource: ".(js|css)$",
       minify: false,
+      hash: true,
     }),
   ],
   devServer: {
