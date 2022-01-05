@@ -94,6 +94,9 @@ export class Moon extends Scene {
       if (charId == "player") {
         this.player.anims.stop();
         this.player.anims.play("stay-down");
+      } else {
+        npcs.get(charId).anims.stop();
+        npcs.get(charId).anims.play("stay-down");
       }
     });
 
