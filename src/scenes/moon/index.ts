@@ -14,7 +14,6 @@ export class Moon extends Scene {
   private landerLayer!: Tilemaps.TilemapLayer;
   private landerHoverLayer!: Tilemaps.TilemapLayer;
   private pointer: any;
-  private gridEngine: any;
 
   constructor() {
     super("moon-scene");
@@ -23,7 +22,7 @@ export class Moon extends Scene {
   create(): void {
     this.initMap();
     this.pointer = this.add.circle(0, 0, 4, 0x6666ff);
-    this.player = new Player(this);
+    this.player = new Player(this, 408, 408);
 
     // TEST NPC ONCLICK ( TODO : should be done as separated class)
     this.npc = this.add.sprite(368, 416, "astronaut");
@@ -40,78 +39,13 @@ export class Moon extends Scene {
       }),
       frameRate: 4,
     });
+    this.npcs = this.physics.add.staticGroup();
+    this.npcs.add(this.npc);
+    this.physics.add.collider(this.player, this.npcs);
 
-    const gridEngineConfig = {
-      collisionTilePropertyName: "collides",
-      characters: [
-        {
-          id: "player",
-          sprite: this.player,
-          startPosition: { x: 25, y: 25 },
-          speed: 1,
-        },
-        {
-          id: "singleNpc",
-          sprite: this.npc,
-          startPosition: { x: 24, y: 24 },
-        },
-      ],
-    };
-
-    const npcs: Map<string, any> = new Map<string, any>();
-
-    for (let x = 35; x <= 40; x++) {
-      for (let y = 25; y <= 30; y++) {
-        const spr = this.add.sprite(0, 0, "astronaut");
-        npcs.set(`npc${x}#${y}`, spr);
-
-        gridEngineConfig.characters.push({
-          id: `npc${x}#${y}`,
-          sprite: spr,
-          startPosition: { x, y },
-          speed: 1,
-        });
-      }
-    }
-
-    this.gridEngine.create(this.map, gridEngineConfig);
-
-    for (let x = 35; x <= 40; x++) {
-      for (let y = 25; y <= 30; y++) {
-        this.gridEngine.moveRandomly(`npc${x}#${y}`, this.getRandomInt(0, 1500));
-      }
-    }
-
-    this.gridEngine.movementStarted().subscribe(({ charId, direction }: any) => {
-      if (charId == "player") {
-        this.player.anims.play(direction);
-      } else {
-        npcs.get(charId).anims.play(direction);
-      }
-    });
-
-    this.gridEngine.movementStopped().subscribe(({ charId, direction }: any) => {
-      if (charId == "player") {
-        this.player.anims.stop();
-        this.player.anims.play("stay-down");
-      } else {
-        npcs.get(charId).anims.stop();
-        npcs.get(charId).anims.play("stay-down");
-      }
-    });
-
-    this.gridEngine.directionChanged().subscribe(({ charId, direction }: any) => {
-      if (charId == "player") {
-        this.player.anims.play("stay-down");
-      }
-    });
-
-    // Pointer
     this.input.on("pointerdown", (pointer: any, gameObject: any) => {
       this.pointer.x = pointer.worldX;
       this.pointer.y = pointer.worldY;
-
-      this.gridEngine.moveTo("player", { x: Math.floor(pointer.worldX / 16), y: Math.floor(pointer.worldY / 16) });
     });
 
     this.physics.add.collider(this.player, this.cratersLayer);
@@ -120,7 +54,8 @@ export class Moon extends Scene {
   }
 
   update(): void {
-    this.player.update(this.gridEngine);
+    this.player.update();
+    this.npc.anims.play("stay-down", true);
   }
 
   private initCamera(): void {
@@ -144,13 +79,5 @@ export class Moon extends Scene {
     this.landerLayer.setCollisionByProperty({ collides: true });
     this.landerHoverLayer = this.map.createLayer("lander-hover", this.landerTileset, 0, 0);
     this.landerHoverLayer.setDepth(2);
-
-    // this.add.grid(0, 0, 16 * 100, 16 * 100, 16, 16, 0x010101, 0.4); // visible grid for testing purposes
-  }
-
-  getRandomInt(min: integer, max: integer): integer {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 }

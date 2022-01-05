@@ -9,6 +9,14 @@ export class Actor extends Physics.Arcade.Sprite {
     // this.getBody().setCollideWorldBounds(true);
   }
 
+  protected checkFlip(): void {
+    if (this.body.velocity.x < 0) {
+      this.scaleX = -1 * Math.abs(this.scaleX);
+    } else {
+      this.scaleX = Math.abs(this.scaleX);
+    }
+  }
+
   protected getBody(): Physics.Arcade.Body {
     return this.body as Physics.Arcade.Body;
   }
