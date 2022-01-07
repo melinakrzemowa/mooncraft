@@ -13,7 +13,7 @@ export class Moon extends Scene {
   private cratersLayer!: Tilemaps.TilemapLayer;
   private landerLayer!: Tilemaps.TilemapLayer;
   private landerHoverLayer!: Tilemaps.TilemapLayer;
-  private pointer: any;
+  // private pointer: any;
   private gridEngine: any;
 
   constructor() {
@@ -22,7 +22,7 @@ export class Moon extends Scene {
 
   create(): void {
     this.initMap();
-    this.pointer = this.add.circle(0, 0, 4, 0x6666ff);
+    // this.pointer = this.add.circle(0, 0, 4, 0x6666ff);
     this.player = new Player(this);
 
     // TEST NPC ONCLICK ( TODO : should be done as separated class)
@@ -47,7 +47,7 @@ export class Moon extends Scene {
         {
           id: "player",
           sprite: this.player,
-          startPosition: { x: 25, y: 25 },
+          startPosition: { x: 27, y: 26 },
           speed: 1,
         },
         {
@@ -108,9 +108,8 @@ export class Moon extends Scene {
 
     // Pointer
     this.input.on("pointerdown", (pointer: any, gameObject: any) => {
-      this.pointer.x = pointer.worldX;
-      this.pointer.y = pointer.worldY;
-
+      // this.pointer.x = pointer.worldX;
+      // this.pointer.y = pointer.worldY;
       this.gridEngine.moveTo("player", { x: Math.floor(pointer.worldX / 16), y: Math.floor(pointer.worldY / 16) });
     });
 
@@ -121,6 +120,10 @@ export class Moon extends Scene {
 
   update(): void {
     this.player.update(this.gridEngine);
+
+    if (this.player.x > 430 && this.player.x < 450 && this.player.y > 399 && this.player.y < 401) {
+      this.scene.start("lander-scene");
+    }
   }
 
   private initCamera(): void {
@@ -139,12 +142,8 @@ export class Moon extends Scene {
     this.landerTileset = this.map.addTilesetImage("lander", "lander");
     this.groundLayer = this.map.createLayer("ground", this.groundTileset, 0, 0); // (layar-name-from-Tiled, Tileset)
     this.cratersLayer = this.map.createLayer("craters", this.cratersTileset, 0, 0);
-    this.cratersLayer.setCollisionByProperty({ collides: true }); // custom property of Tileset in Tiled
     this.landerLayer = this.map.createLayer("lander", this.landerTileset, 0, 0);
-    this.landerLayer.setCollisionByProperty({ collides: true });
     this.landerHoverLayer = this.map.createLayer("lander-hover", this.landerTileset, 0, 0);
-    this.landerHoverLayer.setDepth(2);
-
     // this.add.grid(0, 0, 16 * 100, 16 * 100, 16, 16, 0x010101, 0.4); // visible grid for testing purposes
   }
 

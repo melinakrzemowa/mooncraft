@@ -11,7 +11,6 @@ export class Player extends Actor {
 
     // PHYSICS
     this.setCircle(8);
-    this.setDepth(1);
 
     // ANIMATIONS
     this.initAnimations();

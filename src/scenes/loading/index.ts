@@ -8,6 +8,8 @@ export class LoadingScene extends Scene {
   preload(): void {
     this.load.baseURL = "assets/";
     this.load.atlas("astronaut", "spritesheets/astronaut.png", "spritesheets/astronaut_atlas.json");
+
+    // moon scene:
     this.load.image({
       key: "moon-ground",
       url: "tilemaps/tiles/moon-ground.png",
@@ -21,6 +23,13 @@ export class LoadingScene extends Scene {
       url: "tilemaps/tiles/lander.png",
     });
     this.load.tilemapTiledJSON("moon-map", "tilemaps/json/moon-map.json");
+
+    // lander interior scene:
+    this.load.image({
+      key: "lander-interior",
+      url: "tilemaps/tiles/lander-interior.png",
+    });
+    this.load.tilemapTiledJSON("lander-interior-map", "tilemaps/json/lander-interior-map.json");
   }
 
   create(): void {
