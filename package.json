@@ -12,6 +12,7 @@
     "prettier": "npx prettier --check ./src/**/*.{ts,html}"
   },
   "dependencies": {
+    "grid-engine": "^2.12.0",
     "phaser": "^3.55.2"
   },
   "devDependencies": {
