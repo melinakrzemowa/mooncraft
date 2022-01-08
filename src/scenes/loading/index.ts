@@ -33,6 +33,7 @@ export class LoadingScene extends Scene {
   }
 
   create(): void {
+    this.registry.set("playerPosition", { x: 25, y: 26 });
     this.scene.start("moon-scene");
   }
 }

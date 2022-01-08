@@ -47,7 +47,7 @@ export class Moon extends Scene {
         {
           id: "player",
           sprite: this.player,
-          startPosition: { x: 27, y: 26 },
+          startPosition: { x: this.registry.list.playerPosition.x, y: this.registry.list.playerPosition.y },
           speed: 1,
         },
         {
@@ -122,6 +122,7 @@ export class Moon extends Scene {
     this.player.update(this.gridEngine);
 
     if (this.player.x > 430 && this.player.x < 450 && this.player.y > 399 && this.player.y < 401) {
+      this.registry.set("playerPosition", { x: 12, y: 13 });
       this.scene.start("lander-scene");
     }
   }
