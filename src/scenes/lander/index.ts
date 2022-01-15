@@ -18,7 +18,7 @@ export class Lander extends Scene {
     this.initMap();
     this.player = new Player(this);
 
-    const gridEngineConfig : GridEngineConfig = {
+    const gridEngineConfig: GridEngineConfig = {
       collisionTilePropertyName: "collides",
       characters: [
         {

@@ -42,7 +42,7 @@ export class Moon extends Scene {
       frameRate: 4,
     });
 
-    const gridEngineConfig : GridEngineConfig = {
+    const gridEngineConfig: GridEngineConfig = {
       collisionTilePropertyName: "collides",
       characters: [
         {
