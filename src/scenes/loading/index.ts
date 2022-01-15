@@ -43,13 +43,6 @@ export class LoadingScene extends Scene {
       url: "tilemaps/tiles/lander-interior.png",
     });
     this.load.tilemapTiledJSON("lander-interior-map", "tilemaps/json/lander-interior-map.json");
-
-    // for (let i = 0; i < 1000; i++) {
-    //   this.load.image({
-    //     key: "lander" + i,
-    //     url: "tilemaps/tiles/lander.png",
-    //   });
-    // }
   }
 
   create(): void {
