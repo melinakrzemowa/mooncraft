@@ -1,3 +1,4 @@
+import { GridEngine, GridEngineConfig } from "grid-engine";
 import { GameObjects, Scene, Tilemaps, Physics } from "phaser";
 import { Player } from "../../classes/player";
 
@@ -7,7 +8,7 @@ export class Lander extends Scene {
   private landerTileset!: Tilemaps.Tileset;
   private groundLayer!: Tilemaps.TilemapLayer;
   private furnitureLayer!: Tilemaps.TilemapLayer;
-  private gridEngine: any;
+  private gridEngine!: GridEngine;
 
   constructor() {
     super("lander-scene");
@@ -17,7 +18,7 @@ export class Lander extends Scene {
     this.initMap();
     this.player = new Player(this);
 
-    const gridEngineConfig = {
+    const gridEngineConfig: GridEngineConfig = {
       collisionTilePropertyName: "collides",
       characters: [
         {
