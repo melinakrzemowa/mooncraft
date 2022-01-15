@@ -1,3 +1,4 @@
+import { Direction, GridEngine } from "grid-engine";
 import { Actor } from "./actor";
 
 export class Player extends Actor {
@@ -16,16 +17,16 @@ export class Player extends Actor {
     this.initAnimations();
   }
 
-  update(gridEngine: any): void {
+  update(gridEngine: GridEngine): void {
     const cursors = this.scene.input.keyboard.createCursorKeys();
     if (cursors.left.isDown) {
-      gridEngine.move("player", "left");
+      gridEngine.move("player", Direction.LEFT);
     } else if (cursors.right.isDown) {
-      gridEngine.move("player", "right");
+      gridEngine.move("player", Direction.RIGHT);
     } else if (cursors.up.isDown) {
-      gridEngine.move("player", "up");
+      gridEngine.move("player", Direction.UP);
     } else if (cursors.down.isDown) {
-      gridEngine.move("player", "down");
+      gridEngine.move("player", Direction.DOWN);
     }
 
     if (this.keySpace?.isDown) {
