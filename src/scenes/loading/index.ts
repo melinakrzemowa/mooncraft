@@ -57,17 +57,11 @@ export class LoadingScene extends Scene {
   }
 
   startSinglePlayer(): void {
-    this.singlePlayerText.destroy();
-    this.multiPlayerText.destroy();
-
     this.registry.set("playerPosition", { x: 25, y: 26 });
     this.scene.start("moon-scene");
   }
 
   startMultiPlayer(): void {
-    this.singlePlayerText.destroy();
-    this.multiPlayerText.destroy();
-
     this.scene.start("multi-scene");
   }
 
