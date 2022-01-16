@@ -1,8 +1,21 @@
 import { Scene } from "phaser";
 
 export class LoadingScene extends Scene {
+  private loadingText!: Phaser.GameObjects.Text;
+  private singlePlayerText!: Phaser.GameObjects.Text;
+  private multiPlayerText!: Phaser.GameObjects.Text;
+
   constructor() {
     super("loading-scene");
+  }
+
+  init() {
+    this.loadingText = this.add.text(2080 / 2, 1440 / 2, "Loading ...", {
+      font: "64pt ThaleahFat",
+      color: "#FFFFFF",
+      align: "center",
+    });
+    this.loadingText.setOrigin(0.5, 0.5);
   }
 
   preload(): void {
@@ -33,7 +46,38 @@ export class LoadingScene extends Scene {
   }
 
   create(): void {
+    this.loadingText.destroy(); // Remove loading text
+
+    this.singlePlayerText = this.createButton(2080 / 2, 1440 / 2 - 100, "SINGLE PLAYER");
+    this.multiPlayerText = this.createButton(2080 / 2, 1440 / 2 + 100, "MULTI PLAYER");
+
+    this.singlePlayerText.on("pointerdown", () => this.startSinglePlayer());
+    this.multiPlayerText.on("pointerdown", () => this.startMultiPlayer());
+  }
+
+  startSinglePlayer(): void {
     this.registry.set("playerPosition", { x: 49, y: 51 });
     this.scene.start("moon-scene");
+  }
+
+  startMultiPlayer(): void {
+    this.scene.start("multi-scene");
+  }
+
+  createButton(x: number, y: number, text: string): Phaser.GameObjects.Text {
+    const button = this.add.text(x, y, text, { font: "128pt ThaleahFat", color: "#FFFFFF", align: "center" });
+    button.setOrigin(0.5, 0.5);
+    button.setShadow(10, 5, "#333333", 0, false, true);
+    button.setInteractive();
+
+    button.on("pointerover", () => {
+      button.setColor("#6b6688");
+    });
+
+    button.on("pointerout", () => {
+      button.setColor("#FFFFFF");
+    });
+
+    return button;
   }
 }

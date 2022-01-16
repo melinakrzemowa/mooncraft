@@ -1,3 +1,4 @@
+import { GridEngine, GridEngineConfig } from "grid-engine";
 import { GameObjects, Scene, Tilemaps, Physics } from "phaser";
 import { Player } from "../../classes/player";
 
@@ -14,7 +15,7 @@ export class Moon extends Scene {
   private landerLayer!: Tilemaps.TilemapLayer;
   private landerHoverLayer!: Tilemaps.TilemapLayer;
   // private pointer: any;
-  private gridEngine: any;
+  private gridEngine!: GridEngine;
 
   constructor() {
     super("moon-scene");
@@ -41,7 +42,7 @@ export class Moon extends Scene {
       frameRate: 4,
     });
 
-    const gridEngineConfig = {
+    const gridEngineConfig: GridEngineConfig = {
       collisionTilePropertyName: "collides",
       characters: [
         {
