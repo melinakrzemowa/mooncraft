@@ -120,8 +120,9 @@ export class Moon extends Scene {
 
   update(): void {
     this.player.update(this.gridEngine);
-
-    if (this.player.x > 430 && this.player.x < 450 && this.player.y > 399 && this.player.y < 401) {
+    console.log("x: ", this.player.x);
+    console.log("y: ", this.player.y);
+    if (this.player.x > 799 && this.player.x < 801 && this.player.y > 783 && this.player.y < 785) {
       this.registry.set("playerPosition", { x: 12, y: 13 });
       this.scene.start("lander-scene");
     }
