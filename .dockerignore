@@ -1,0 +1,21 @@
+# Node modules and build artifacts
+node_modules/
+dist/
+*.log
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.md
+!readme.md
+

@@ -1,0 +1,67 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Login to Self-Hosted Registry
+      uses: docker/login-action@v1
+      with:
+        registry: registry.melinakrzemowa.pl
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Get the hash
+      id: get_hash
+      run: |
+        echo "HASH=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+
+    - name: 'Get Previous tag'
+      id: previoustag
+      uses: "WyriHaximus/github-action-get-previous-tag@master"
+
+    - name: Build and push
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: |
+          registry.melinakrzemowa.pl/mooncraft:latest
+          registry.melinakrzemowa.pl/mooncraft:${{ steps.previoustag.outputs.tag }}
+          registry.melinakrzemowa.pl/mooncraft:${{ steps.previoustag.outputs.tag }}-${{ steps.get_hash.outputs.HASH }}
+
+    - name: Copy docker-compose.yml
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        port: ${{ secrets.SSH_PORT }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.PRIVATE_KEY }}
+        source: "docker-compose.yml"
+        target: "/var/www/mooncraft.melinakrzemowa.pl"
+        overwrite: true
+
+    - name: Update service using docker-compose
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        port: ${{ secrets.SSH_PORT }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.PRIVATE_KEY }}
+        script: |
+          export VERSION=${{ steps.previoustag.outputs.tag }}-${{ steps.get_hash.outputs.HASH }}
+          cd /var/www/mooncraft.melinakrzemowa.pl
+          docker pull registry.melinakrzemowa.pl/mooncraft:${VERSION}
+          docker compose up -d
+
