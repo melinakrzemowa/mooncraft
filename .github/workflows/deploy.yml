@@ -48,6 +48,8 @@ jobs:
           registry.melinakrzemowa.pl/mooncraft:latest
           registry.melinakrzemowa.pl/mooncraft:${{ steps.previoustag.outputs.tag }}
           registry.melinakrzemowa.pl/mooncraft:${{ steps.previoustag.outputs.tag }}-${{ steps.get_hash.outputs.HASH }}
+        cache-from: type=registry,ref=registry.melinakrzemowa.pl/mooncraft:buildcache
+        cache-to: type=registry,ref=registry.melinakrzemowa.pl/mooncraft:buildcache,mode=max
 
     - name: Copy docker-compose.yml
       uses: appleboy/scp-action@master
