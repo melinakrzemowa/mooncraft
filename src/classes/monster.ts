@@ -22,7 +22,7 @@ export const WORM_CONFIG: MonsterConfig = {
 
 export const BIG_WORM_CONFIG: MonsterConfig = {
   maxHealth: 80, damage: 16, attackCooldown: 3000, speed: 1,
-  aggroRange: 8, xpReward: 30, spriteKey: "enemy_worm", scale: 2,
+  aggroRange: 8, xpReward: 60, spriteKey: "alien_big", scale: 1,
   plasmaRange: 3, plasmaDamage: 16,
 };
 
@@ -76,18 +76,19 @@ export class Monster {
       return;
     }
 
+    const animPrefix = this.config.spriteKey === "alien_big" ? "alien" : "worm";
     this.startWandering();
-    this.sprite.anims.play("worm-idle");
+    this.sprite.anims.play(`${animPrefix}-idle`);
 
     gridEngine.movementStarted().subscribe(({ charId }: any) => {
       if (charId === this.id && this.alive) {
-        this.sprite.anims.play("worm-walk");
+        this.sprite.anims.play(`${animPrefix}-walk`);
       }
     });
 
     gridEngine.movementStopped().subscribe(({ charId }: any) => {
       if (charId === this.id && this.alive && !this.aggroed) {
-        this.sprite.anims.play("worm-idle");
+        this.sprite.anims.play(`${animPrefix}-idle`);
       }
     });
   }
@@ -118,7 +119,8 @@ export class Monster {
         const aligned = (dx === 0 || dy === 0) && dist <= this.config.plasmaRange && dist > 1;
         if (aligned) {
           this.lastPlasmaTime = now;
-          this.sprite.anims.play("worm-attack");
+          const ap = this.config.spriteKey === "alien_big" ? "alien" : "worm";
+          this.sprite.anims.play(`${ap}-attack`);
           plasma = {
             damage: this.config.plasmaDamage,
             fromX: myPos.x, fromY: myPos.y,
@@ -168,7 +170,8 @@ export class Monster {
     const now = Date.now();
     if (now - this.lastAttackTime < this.config.attackCooldown) return 0;
     this.lastAttackTime = now;
-    this.sprite.anims.play("worm-attack");
+    const animPrefix = this.config.spriteKey === "alien_big" ? "alien" : "worm";
+    this.sprite.anims.play(`${animPrefix}-attack`);
     return this.config.damage;
   }
 
@@ -210,9 +213,10 @@ export class Monster {
     this.aggroed = false;
     this.lastAttackTime = 0;
     this.lastPlasmaTime = 0;
+    const animPrefix = this.config.spriteKey === "alien_big" ? "alien" : "worm";
     this.gridEngine.setPosition(this.id, this.spawnPos);
     this.sprite.setVisible(true);
-    this.sprite.anims.play("worm-idle");
+    this.sprite.anims.play(`${animPrefix}-idle`);
     this.startWandering();
   }
 
@@ -255,12 +259,14 @@ export class Monster {
 
   private drawHealthBar(): void {
     this.healthBar.clear();
-    if (!this.alive) return;
+    if (!this.alive || !this.gridEngine) return;
 
-    const width = 12 * this.config.scale;
+    const pos = this.gridEngine.getPosition(this.id);
+    const width = 12;
     const height = 1.5;
-    const x = this.sprite.x - width / 2;
-    const y = this.sprite.y - 16 * this.config.scale - 1;
+    const cx = pos.x * 16 + 8;
+    const x = cx - width / 2;
+    const y = pos.y * 16 - 2;
     const ratio = this.health / this.maxHealth;
 
     this.healthBar.fillStyle(0x000000, 0.6);

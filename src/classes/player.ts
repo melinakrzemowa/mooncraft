@@ -40,6 +40,7 @@ export class Player extends Actor {
   private healthBar: Phaser.GameObjects.Graphics;
   private xpBar: Phaser.GameObjects.Graphics;
   private levelText: Phaser.GameObjects.Text;
+  private _gridEngine: GridEngine | null = null;
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0, "astronaut");
@@ -94,6 +95,7 @@ export class Player extends Actor {
   public touchState: TouchState | null = null;
 
   update(gridEngine: GridEngine, blockMovement = false): void {
+    this._gridEngine = gridEngine;
     const t = this.touchState;
 
     if (!blockMovement) {
@@ -273,14 +275,15 @@ export class Player extends Actor {
 
   private drawHealthBar(): void {
     this.healthBar.clear();
-    if (!this.inCombat) return;
+    if (!this.inCombat || !this._gridEngine) return;
 
     const width = 12;
     const height = 1.5;
-    // Use the sprite's actual drawn position - the sprite texture is 16x16
-    // and GridEngine positions it so the bottom of the sprite aligns with the tile bottom
-    const x = this.x - width / 2;
-    const y = this.y - 16 - 1; // 16px sprite height, 1px gap above
+    const pos = this._gridEngine.getPosition("player");
+    // Tile center = pos * 16 + 8, bar above the tile
+    const cx = pos.x * 16 + 8;
+    const x = cx - width / 2;
+    const y = pos.y * 16 - 2;
     const ratio = this.health / this.maxHealth;
 
     this.healthBar.fillStyle(0x000000, 0.6);

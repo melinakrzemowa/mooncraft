@@ -185,16 +185,33 @@ export class Moon extends Scene {
   }
 
   private showPlasmaEffect(fx: number, fy: number, tx: number, ty: number): void {
-    const steps = Math.max(Math.abs(tx - fx), Math.abs(ty - fy));
-    const dx = tx === fx ? 0 : (tx > fx ? 1 : -1);
-    const dy = ty === fy ? 0 : (ty > fy ? 1 : -1);
-    for (let i = 1; i <= steps; i++) {
-      const px = (fx + dx * i) * 16 + 8;
-      const py = (fy + dy * i) * 16 + 8;
-      const dot = this.add.circle(px, py, 1.5, 0xff00ff);
-      dot.setDepth(997);
-      this.tweens.add({ targets: dot, alpha: 0, duration: 300, delay: i * 50, onComplete: () => dot.destroy() });
-    }
+    const startX = fx * 16 + 8;
+    const startY = fy * 16 + 8;
+    const endX = tx * 16 + 8;
+    const endY = ty * 16 + 8;
+    const dist = Math.max(Math.abs(tx - fx), Math.abs(ty - fy));
+
+    const bolt = this.add.sprite(startX, startY, "plasma_bolt");
+    bolt.anims.play("plasma-fly");
+    bolt.setDepth(997);
+
+    // Rotate bolt to face travel direction
+    const angle = Math.atan2(endY - startY, endX - startX);
+    bolt.setRotation(angle);
+
+    this.tweens.add({
+      targets: bolt,
+      x: endX,
+      y: endY,
+      duration: dist * 200, // 200ms per tile - slow and menacing
+      onComplete: () => {
+        // Impact flash
+        const flash = this.add.circle(endX, endY, 4, 0xff00ff, 0.6);
+        flash.setDepth(997);
+        this.tweens.add({ targets: flash, alpha: 0, scale: 2, duration: 200, onComplete: () => flash.destroy() });
+        bolt.destroy();
+      },
+    });
   }
 
   private saveState(scene: string, px: number, py: number): void {
