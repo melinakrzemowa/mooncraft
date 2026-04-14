@@ -277,9 +277,9 @@ export class Player extends Actor {
 
     const width = 12;
     const height = 1.5;
-    // sprite.x/y is updated smoothly by GridEngine during movement
-    const x = this.x - width / 2;
-    const y = this.y - 10;
+    const top = this.getTopCenter();
+    const x = top.x - width / 2;
+    const y = top.y - 2;
     const ratio = this.health / this.maxHealth;
 
     this.healthBar.fillStyle(0x000000, 0.6);
@@ -293,13 +293,10 @@ export class Player extends Actor {
   private drawXpBar(): void {
     this.xpBar.clear();
 
-    // Position relative to player (camera always centers on player)
-    // Top-left of visible area is player pos minus half viewport
+    // Use camera worldView which gives the exact visible rectangle
     const cam = this.scene.cameras.main;
-    const halfW = cam.width / cam.zoom / 2;
-    const halfH = cam.height / cam.zoom / 2;
-    const left = this.x - halfW;
-    const top = this.y - halfH;
+    const left = Math.round(cam.worldView.x);
+    const top = Math.round(cam.worldView.y);
 
     // Level text top-left
     this.levelText.setPosition(left + 1, top + 1);
