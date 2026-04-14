@@ -293,10 +293,14 @@ export class Player extends Actor {
   private drawXpBar(): void {
     this.xpBar.clear();
 
-    // Use camera worldView which gives the exact visible rectangle
+    // Position relative to player + camera offset (moves 1:1 with player, no jitter)
     const cam = this.scene.cameras.main;
-    const left = Math.round(cam.worldView.x);
-    const top = Math.round(cam.worldView.y);
+    const halfW = cam.width / cam.zoom / 2;
+    const halfH = cam.height / cam.zoom / 2;
+    const ox = cam.followOffset ? cam.followOffset.x : 0;
+    const oy = cam.followOffset ? cam.followOffset.y : 0;
+    const left = this.x + ox - halfW;
+    const top = this.y + oy - halfH;
 
     // Level text top-left
     this.levelText.setPosition(left + 1, top + 1);
