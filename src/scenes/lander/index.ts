@@ -139,7 +139,10 @@ export class Lander extends Scene {
       this.terminal.hide();
       return;
     }
-    if (this.healingStation.isVisible()) return;
+    if (this.healingStation.isVisible()) {
+      if (!this.healingStation.isHealing()) this.healingStation.hide();
+      return;
+    }
 
     const facing = this.gridEngine.getFacingDirection("player");
     const playerPos = this.gridEngine.getPosition("player");
