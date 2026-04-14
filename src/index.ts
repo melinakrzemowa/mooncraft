@@ -13,7 +13,7 @@ const gameConfig: Types.Core.GameConfig = {
   antialias: false,
   backgroundColor: "#adacb9",
   scale: {
-    mode: Scale.ENVELOP,
+    mode: Scale.FIT,
     autoCenter: Scale.CENTER_BOTH,
   },
   physics: {
