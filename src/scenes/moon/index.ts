@@ -208,17 +208,19 @@ export class Moon extends Scene {
       y: endY,
       duration: travelTime,
       onComplete: () => {
-        // 3x3 hit radius (1 tile in each direction from impact)
+        // Cross-shaped hit: center + up/down/left/right (5 tiles)
         const playerPos = this.gridEngine.getPosition("player");
-        const hitDist = Math.max(Math.abs(playerPos.x - toX), Math.abs(playerPos.y - toY));
-        if (hitDist <= 1) {
+        const dx = Math.abs(playerPos.x - toX);
+        const dy = Math.abs(playerPos.y - toY);
+        const inCross = (dx === 0 && dy === 0) || (dx === 0 && dy === 1) || (dx === 1 && dy === 0);
+        if (inCross) {
           this.player.takeDamage(damage);
         }
 
-        // Explosion flash (3x3 area = 48x48 pixels)
-        const flash = this.add.circle(endX, endY, 24, 0xff00ff, 0.4);
+        // Impact flash
+        const flash = this.add.circle(endX, endY, 12, 0xff00ff, 0.4);
         flash.setDepth(997);
-        this.tweens.add({ targets: flash, alpha: 0, scale: 1.5, duration: 300, onComplete: () => flash.destroy() });
+        this.tweens.add({ targets: flash, alpha: 0, scale: 1.5, duration: 250, onComplete: () => flash.destroy() });
         bolt.destroy();
         glow.destroy();
       },
