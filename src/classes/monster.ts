@@ -1,10 +1,31 @@
 import { Direction, GridEngine } from "grid-engine";
 import { GameObjects, Scene } from "phaser";
 
-const AGGRO_RANGE = 6;
-const ATTACK_RANGE = 1;
-const ATTACK_COOLDOWN = 1500;
-const ATTACK_DAMAGE = 8;
+export interface MonsterConfig {
+  maxHealth: number;
+  damage: number;
+  attackCooldown: number;
+  speed: number;
+  aggroRange: number;
+  xpReward: number;
+  spriteKey: string;
+  scale: number;
+  plasmaRange: number;  // 0 = melee only
+  plasmaDamage: number;
+}
+
+export const WORM_CONFIG: MonsterConfig = {
+  maxHealth: 30, damage: 8, attackCooldown: 1500, speed: 1,
+  aggroRange: 6, xpReward: 10, spriteKey: "enemy_worm", scale: 1,
+  plasmaRange: 0, plasmaDamage: 0,
+};
+
+export const BIG_WORM_CONFIG: MonsterConfig = {
+  maxHealth: 80, damage: 16, attackCooldown: 3000, speed: 1,
+  aggroRange: 8, xpReward: 30, spriteKey: "enemy_worm", scale: 2,
+  plasmaRange: 3, plasmaDamage: 16,
+};
+
 const WANDER_DELAY = 3000;
 const RESPAWN_MIN = 60000;
 const RESPAWN_MAX = 120000;
@@ -16,23 +37,28 @@ export class Monster {
   public maxHealth: number;
   public alive = true;
   public spawnPos: { x: number; y: number };
+  public config: MonsterConfig;
 
   private scene: Scene;
   private gridEngine!: GridEngine;
   private aggroed = false;
   private lastAttackTime = 0;
+  private lastPlasmaTime = 0;
   private wanderTimer: Phaser.Time.TimerEvent | null = null;
   private respawnTimer: Phaser.Time.TimerEvent | null = null;
   private healthBar: GameObjects.Graphics;
+  private knockbackUntil = 0;
 
-  constructor(scene: Scene, id: string, spawnPos: { x: number; y: number }, maxHealth = 30) {
+  constructor(scene: Scene, id: string, spawnPos: { x: number; y: number }, config: MonsterConfig = WORM_CONFIG) {
     this.scene = scene;
     this.id = id;
     this.spawnPos = spawnPos;
-    this.maxHealth = maxHealth;
-    this.health = maxHealth;
+    this.config = config;
+    this.maxHealth = config.maxHealth;
+    this.health = config.maxHealth;
 
-    this.sprite = scene.add.sprite(0, 0, "enemy_worm");
+    this.sprite = scene.add.sprite(0, 0, config.spriteKey);
+    if (config.scale !== 1) this.sprite.setScale(config.scale);
     this.initAnimations();
 
     this.healthBar = scene.add.graphics();
@@ -66,32 +92,50 @@ export class Monster {
     });
   }
 
-  update(playerPos: { x: number; y: number }): number {
-    if (!this.alive) return 0;
+  update(playerPos: { x: number; y: number }): { melee: number; plasma: { damage: number; fromX: number; fromY: number; toX: number; toY: number } | null } {
+    if (!this.alive) return { melee: 0, plasma: null };
 
     const myPos = this.gridEngine.getPosition(this.id);
     const dist = Math.max(Math.abs(myPos.x - playerPos.x), Math.abs(myPos.y - playerPos.y));
+    const now = Date.now();
 
-    if (!this.aggroed && dist <= AGGRO_RANGE) {
+    if (!this.aggroed && dist <= this.config.aggroRange) {
       this.aggroed = true;
       this.stopWandering();
-    } else if (this.aggroed && dist > AGGRO_RANGE * 2) {
+    } else if (this.aggroed && dist > this.config.aggroRange * 2) {
       this.aggroed = false;
       this.startWandering();
     }
 
-    let damage = 0;
+    let melee = 0;
+    let plasma: { damage: number; fromX: number; fromY: number; toX: number; toY: number } | null = null;
 
-    if (this.aggroed) {
-      if (dist <= ATTACK_RANGE) {
-        damage = this.tryAttack();
-      } else {
+    if (this.aggroed && now > this.knockbackUntil) {
+      // Plasma attack -- fires in a line if player is aligned and in range
+      if (this.config.plasmaRange > 0 && now - this.lastPlasmaTime > this.config.attackCooldown) {
+        const dx = playerPos.x - myPos.x;
+        const dy = playerPos.y - myPos.y;
+        const aligned = (dx === 0 || dy === 0) && dist <= this.config.plasmaRange && dist > 1;
+        if (aligned) {
+          this.lastPlasmaTime = now;
+          this.sprite.anims.play("worm-attack");
+          plasma = {
+            damage: this.config.plasmaDamage,
+            fromX: myPos.x, fromY: myPos.y,
+            toX: playerPos.x, toY: playerPos.y,
+          };
+        }
+      }
+
+      if (dist <= 1) {
+        melee = this.tryAttack();
+      } else if (!plasma) {
         this.chasePlayer(playerPos);
       }
     }
 
     this.drawHealthBar();
-    return damage;
+    return { melee, plasma };
   }
 
   takeDamage(amount: number): void {
@@ -106,11 +150,15 @@ export class Monster {
     return this.aggroed;
   }
 
-  knockback(dx: number, dy: number, tiles: number): void {
+  knockback(fromX: number, fromY: number, tiles: number): void {
     if (!this.alive) return;
     const pos = this.gridEngine.getPosition(this.id);
-    const nx = dx !== 0 ? pos.x + dx * tiles : pos.x;
-    const ny = dy !== 0 ? pos.y + dy * tiles : pos.y;
+    const dx = pos.x === fromX ? 0 : (pos.x > fromX ? 1 : -1);
+    const dy = pos.y === fromY ? 0 : (pos.y > fromY ? 1 : -1);
+    if (dx === 0 && dy === 0) return;
+    const nx = pos.x + dx * tiles;
+    const ny = pos.y + dy * tiles;
+    this.knockbackUntil = Date.now() + 500;
     this.gridEngine.moveTo(this.id, { x: nx, y: ny }, {
       noPathFoundStrategy: "CLOSEST_REACHABLE" as any,
     });
@@ -118,10 +166,10 @@ export class Monster {
 
   private tryAttack(): number {
     const now = Date.now();
-    if (now - this.lastAttackTime < ATTACK_COOLDOWN) return 0;
+    if (now - this.lastAttackTime < this.config.attackCooldown) return 0;
     this.lastAttackTime = now;
     this.sprite.anims.play("worm-attack");
-    return ATTACK_DAMAGE;
+    return this.config.damage;
   }
 
   private die(): void {
@@ -129,7 +177,6 @@ export class Monster {
     this.aggroed = false;
     this.stopWandering();
     this.healthBar.clear();
-    // Remove collision so player can walk through
     this.gridEngine.setPosition(this.id, { x: -1, y: -1 });
     this.scene.tweens.add({
       targets: this.sprite,
@@ -145,33 +192,24 @@ export class Monster {
 
   private scheduleRespawn(): void {
     const delay = RESPAWN_MIN + Math.random() * (RESPAWN_MAX - RESPAWN_MIN);
-    this.respawnTimer = this.scene.time.delayedCall(delay, () => {
-      this.tryRespawn();
-    });
+    this.respawnTimer = this.scene.time.delayedCall(delay, () => this.tryRespawn());
   }
 
   private tryRespawn(): void {
-    // Check if player is nearby
     const playerPos = this.gridEngine.getPosition("player");
     const dist = Math.max(
       Math.abs(this.spawnPos.x - playerPos.x),
       Math.abs(this.spawnPos.y - playerPos.y)
     );
-
-    if (dist <= AGGRO_RANGE * 2) {
-      // Player too close, try again in 10s
-      this.respawnTimer = this.scene.time.delayedCall(10000, () => {
-        this.tryRespawn();
-      });
+    if (dist <= this.config.aggroRange * 2) {
+      this.respawnTimer = this.scene.time.delayedCall(10000, () => this.tryRespawn());
       return;
     }
-
     this.alive = true;
     this.health = this.maxHealth;
     this.aggroed = false;
     this.lastAttackTime = 0;
-
-    // Move back to spawn position
+    this.lastPlasmaTime = 0;
     this.gridEngine.setPosition(this.id, this.spawnPos);
     this.sprite.setVisible(true);
     this.sprite.anims.play("worm-idle");
@@ -219,10 +257,10 @@ export class Monster {
     this.healthBar.clear();
     if (!this.alive) return;
 
-    const width = 12;
+    const width = 12 * this.config.scale;
     const height = 1.5;
     const x = this.sprite.x - width / 2;
-    const y = this.sprite.y - 9;
+    const y = this.sprite.y - 8 * this.config.scale - 1;
     const ratio = this.health / this.maxHealth;
 
     this.healthBar.fillStyle(0x000000, 0.6);

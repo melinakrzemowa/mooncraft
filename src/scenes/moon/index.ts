@@ -1,24 +1,19 @@
 import { Direction, GridEngine, GridEngineConfig } from "grid-engine";
 import { GameObjects, Scene, Tilemaps, Physics } from "phaser";
 import { Player } from "../../classes/player";
-import { Monster } from "../../classes/monster";
+import { Monster, WORM_CONFIG, BIG_WORM_CONFIG, MonsterConfig } from "../../classes/monster";
 import { saveGame, clearSave, SaveData } from "../../classes/save-manager";
 import { TouchControls } from "../../classes/touch-controls";
 
-// Generate monster spawns across the map (100x50), avoiding the lander area (45-55, 45-55)
-function generateSpawns(): { x: number; y: number }[] {
+// Generate small worm spawns across the map, avoiding lander area
+function generateSmallSpawns(): { x: number; y: number }[] {
   const spawns: { x: number; y: number }[] = [];
   const rng = (min: number, max: number) => Math.floor(min + (max - min) * ((Math.sin(spawns.length * 127.1 + 311.7) * 0.5 + 0.5)));
-
   for (let gx = 0; gx < 10; gx++) {
     for (let gy = 0; gy < 5; gy++) {
-      const baseX = gx * 10 + 3;
-      const baseY = gy * 10 + 3;
-      const x = baseX + rng(0, 6);
-      const y = baseY + rng(0, 6);
-      // Skip lander area
+      const x = gx * 10 + 3 + rng(0, 6);
+      const y = gy * 10 + 3 + rng(0, 6);
       if (x >= 45 && x <= 55 && y >= 45 && y <= 55) continue;
-      // Stay in bounds
       if (x < 2 || x > 97 || y < 2 || y > 47) continue;
       spawns.push({ x, y });
     }
@@ -26,7 +21,13 @@ function generateSpawns(): { x: number; y: number }[] {
   return spawns;
 }
 
-const MONSTER_SPAWNS = generateSpawns();
+// Big worms spawn further from lander
+const BIG_WORM_SPAWNS = [
+  { x: 10, y: 10 }, { x: 90, y: 10 }, { x: 10, y: 40 }, { x: 90, y: 40 },
+  { x: 20, y: 15 }, { x: 80, y: 15 }, { x: 20, y: 38 }, { x: 80, y: 38 },
+];
+
+const SMALL_WORM_SPAWNS = generateSmallSpawns();
 
 export class Moon extends Scene {
   private player!: Player;
@@ -42,7 +43,6 @@ export class Moon extends Scene {
   private gridEngine!: GridEngine;
   private monsters: Monster[] = [];
   private dead = false;
-  private lastSavePos = { x: 0, y: 0 };
 
   constructor() {
     super("moon-scene");
@@ -54,22 +54,15 @@ export class Moon extends Scene {
     this.initMap();
     this.player = new Player(this);
 
-    // Wire touch controls
     const tc: TouchControls | undefined = this.registry.list.touchControls;
     if (tc) this.player.touchState = tc.state;
 
-    // TEST NPC
     this.npc = this.add.sprite(368, 416, "astronaut");
     this.npc.setInteractive();
-    this.npc.on("pointerdown", () => {
-      this.cameras.main.flash();
-    });
+    this.npc.on("pointerdown", () => this.cameras.main.flash());
     this.npc.anims.create({
       key: "stay-down",
-      frames: this.npc.anims.generateFrameNames("astronaut", {
-        prefix: "stay-down-",
-        end: 1,
-      }),
+      frames: this.npc.anims.generateFrameNames("astronaut", { prefix: "stay-down-", end: 1 }),
       frameRate: 4,
     });
 
@@ -82,71 +75,57 @@ export class Moon extends Scene {
           startPosition: { x: this.registry.list.playerPosition.x, y: this.registry.list.playerPosition.y },
           speed: 2,
         },
-        {
-          id: "singleNpc",
-          sprite: this.npc,
-          startPosition: { x: 24, y: 24 },
-        },
+        { id: "singleNpc", sprite: this.npc, startPosition: { x: 24, y: 24 } },
       ],
     };
 
-    // Create all monsters (dead ones start hidden and schedule respawn)
     const save: SaveData | undefined = this.registry.list.saveData;
     const deadMonsters = new Set(save?.deadMonsters || []);
 
-    MONSTER_SPAWNS.forEach((spawn, i) => {
+    // Small worms
+    SMALL_WORM_SPAWNS.forEach((spawn, i) => {
       const id = `monster_${i}`;
-      const monster = new Monster(this, id, spawn);
+      const monster = new Monster(this, id, spawn, WORM_CONFIG);
       this.monsters.push(monster);
+      gridEngineConfig.characters.push({ id, sprite: monster.sprite, startPosition: spawn, speed: 1 });
+    });
 
-      gridEngineConfig.characters.push({
-        id: monster.id,
-        sprite: monster.sprite,
-        startPosition: spawn,
-        speed: 1,
-      });
+    // Big worms
+    BIG_WORM_SPAWNS.forEach((spawn, i) => {
+      const id = `bigworm_${i}`;
+      const monster = new Monster(this, id, spawn, BIG_WORM_CONFIG);
+      this.monsters.push(monster);
+      gridEngineConfig.characters.push({ id, sprite: monster.sprite, startPosition: spawn, speed: 1 });
     });
 
     // NPC walkers
-    const npcs: Map<string, any> = new Map<string, any>();
+    const npcs: Map<string, any> = new Map();
     for (let x = 35; x <= 40; x++) {
       for (let y = 25; y <= 30; y++) {
         const spr = this.add.sprite(0, 0, "astronaut");
         npcs.set(`npc${x}#${y}`, spr);
-        gridEngineConfig.characters.push({
-          id: `npc${x}#${y}`,
-          sprite: spr,
-          startPosition: { x, y },
-          speed: 1,
-        });
+        gridEngineConfig.characters.push({ id: `npc${x}#${y}`, sprite: spr, startPosition: { x, y }, speed: 1 });
       }
     }
 
     this.gridEngine.create(this.map, gridEngineConfig);
-
-    // Init monster AI (dead ones from save start dead with respawn timer)
     this.monsters.forEach((m) => m.init(this.gridEngine, deadMonsters.has(m.id)));
 
-    // NPC random movement
     for (let x = 35; x <= 40; x++) {
       for (let y = 25; y <= 30; y++) {
-        this.gridEngine.moveRandomly(`npc${x}#${y}`, this.getRandomInt(0, 1500));
+        this.gridEngine.moveRandomly(`npc${x}#${y}`, Phaser.Math.Between(0, 1500));
       }
     }
 
     this.gridEngine.movementStarted().subscribe(({ charId, direction }: any) => {
-      if (charId === "player") {
-        this.player.anims.play(direction);
-      } else if (npcs.has(charId)) {
-        npcs.get(charId).anims.play(direction);
-      }
+      if (charId === "player") this.player.anims.play(direction);
+      else if (npcs.has(charId)) npcs.get(charId).anims.play(direction);
     });
 
-    this.gridEngine.movementStopped().subscribe(({ charId, direction }: any) => {
+    this.gridEngine.movementStopped().subscribe(({ charId }: any) => {
       if (charId === "player") {
         this.player.anims.stop();
         this.player.playIdle(this.gridEngine.getFacingDirection("player"));
-        // Save on every player move
         const pos = this.gridEngine.getPosition("player");
         this.saveState("moon-scene", pos.x, pos.y);
       } else if (npcs.has(charId)) {
@@ -156,65 +135,48 @@ export class Moon extends Scene {
     });
 
     this.gridEngine.directionChanged().subscribe(({ charId, direction }: any) => {
-      if (charId === "player") {
-        this.player.playIdle(direction);
-      }
+      if (charId === "player") this.player.playIdle(direction);
     });
 
-    // Pointer movement (desktop only - conflicts with touch controls on mobile)
     if (!tc) {
       this.input.on("pointerdown", (pointer: any) => {
         this.gridEngine.moveTo("player", { x: Math.floor(pointer.worldX / 16), y: Math.floor(pointer.worldY / 16) });
       });
     }
 
-    // Blaster shooting
-    this.player.on("shoot", (data: { facing: Direction; pos: { x: number; y: number }; range: number; damage: number }) => {
-      this.handleShoot(data);
-    });
-
-    // Grenade
-    this.player.on("grenade", (data: { landX: number; landY: number; radius: number; damage: number }) => {
-      this.handleGrenade(data);
-    });
+    this.player.on("shoot", (data: any) => this.handleShoot(data));
+    this.player.on("grenade", (data: any) => this.handleGrenade(data));
 
     this.physics.add.collider(this.player, this.cratersLayer);
     this.physics.add.collider(this.player, this.landerLayer);
     this.initCamera();
-
-    // Set initial save pos
-    this.lastSavePos = { x: this.registry.list.playerPosition.x, y: this.registry.list.playerPosition.y };
   }
 
   update(): void {
     if (this.dead) return;
-
     this.player.update(this.gridEngine);
 
     const playerPos = this.gridEngine.getPosition("player");
-
-    // Update monsters and handle combat
     let anyAggroed = false;
+
     this.monsters.forEach((monster) => {
       if (!monster.alive) return;
-      const damage = monster.update(playerPos);
-      if (damage > 0) {
-        this.player.takeDamage(damage);
+      const result = monster.update(playerPos);
+      if (result.melee > 0) this.player.takeDamage(result.melee);
+      if (result.plasma) {
+        this.player.takeDamage(result.plasma.damage);
+        this.showPlasmaEffect(result.plasma.fromX, result.plasma.fromY, result.plasma.toX, result.plasma.toY);
       }
-      if (monster.isAggroed()) {
-        anyAggroed = true;
-      }
+      if (monster.isAggroed()) anyAggroed = true;
     });
 
     this.player.inCombat = anyAggroed;
 
-    // Player death
     if (this.player.health <= 0) {
       this.showDeathScreen();
       return;
     }
 
-    // Scene transition to lander
     if (this.player.x > 799 && this.player.x < 801 && this.player.y > 783 && this.player.y < 785) {
       this.saveState("lander-scene", 12, 13);
       this.registry.set("playerPosition", { x: 12, y: 13 });
@@ -222,17 +184,25 @@ export class Moon extends Scene {
     }
   }
 
+  private showPlasmaEffect(fx: number, fy: number, tx: number, ty: number): void {
+    const steps = Math.max(Math.abs(tx - fx), Math.abs(ty - fy));
+    const dx = tx === fx ? 0 : (tx > fx ? 1 : -1);
+    const dy = ty === fy ? 0 : (ty > fy ? 1 : -1);
+    for (let i = 1; i <= steps; i++) {
+      const px = (fx + dx * i) * 16 + 8;
+      const py = (fy + dy * i) * 16 + 8;
+      const dot = this.add.circle(px, py, 1.5, 0xff00ff);
+      dot.setDepth(997);
+      this.tweens.add({ targets: dot, alpha: 0, duration: 300, delay: i * 50, onComplete: () => dot.destroy() });
+    }
+  }
+
   private saveState(scene: string, px: number, py: number): void {
     const deadMonsters = this.monsters.filter((m) => !m.alive).map((m) => m.id);
-
     const data: SaveData = {
-      scene,
-      playerX: px,
-      playerY: py,
-      level: this.player.level,
-      xp: this.player.xp,
-      health: this.player.health,
-      maxHealth: this.player.maxHealth,
+      scene, playerX: px, playerY: py,
+      level: this.player.level, xp: this.player.xp,
+      health: this.player.health, maxHealth: this.player.maxHealth,
       deadMonsters,
     };
     saveGame(data);
@@ -254,19 +224,13 @@ export class Moon extends Scene {
     overlay.setDepth(1500);
 
     const deathText = this.add.text(cx, cy - 8, "YOU DIED", {
-      fontFamily: "ThaleahFat",
-      fontSize: "12px",
-      color: "#cc0000",
-      resolution: 4,
+      fontFamily: "ThaleahFat", fontSize: "12px", color: "#cc0000", resolution: 4,
     });
     deathText.setOrigin(0.5);
     deathText.setDepth(1501);
 
     const restartText = this.add.text(cx, cy + 4, "click to respawn", {
-      fontFamily: "ThaleahFat",
-      fontSize: "5px",
-      color: "#888888",
-      resolution: 4,
+      fontFamily: "ThaleahFat", fontSize: "5px", color: "#888888", resolution: 4,
     });
     restartText.setOrigin(0.5);
     restartText.setDepth(1501);
@@ -279,23 +243,19 @@ export class Moon extends Scene {
 
   private handleShoot(data: { facing: Direction; pos: { x: number; y: number }; range: number; damage: number }): void {
     const { facing, pos, range, damage } = data;
-
     const dx = facing === Direction.LEFT ? -1 : facing === Direction.RIGHT ? 1 : 0;
     const dy = facing === Direction.UP ? -1 : facing === Direction.DOWN ? 1 : 0;
 
     for (let i = 1; i <= range; i++) {
       const tx = pos.x + dx * i;
       const ty = pos.y + dy * i;
-
       for (const monster of this.monsters) {
         if (!monster.alive) continue;
         const mpos = this.gridEngine.getPosition(monster.id);
         if (mpos.x === tx && mpos.y === ty) {
           const wasAlive = monster.alive;
           monster.takeDamage(damage);
-          if (wasAlive && !monster.alive) {
-            this.player.addXp(10);
-          }
+          if (wasAlive && !monster.alive) this.player.addXp(monster.config.xpReward);
           return;
         }
       }
@@ -304,10 +264,7 @@ export class Moon extends Scene {
 
   private handleGrenade(data: { landX: number; landY: number; radius: number; damage: number }): void {
     const { landX, landY, radius, damage } = data;
-
-    // Delay to match projectile travel time
     this.time.delayedCall(300, () => {
-      // Damage and knockback everything in radius
       for (const monster of this.monsters) {
         if (!monster.alive) continue;
         const mpos = this.gridEngine.getPosition(monster.id);
@@ -315,26 +272,16 @@ export class Moon extends Scene {
         if (dist <= radius) {
           const wasAlive = monster.alive;
           monster.takeDamage(damage);
-          if (wasAlive && !monster.alive) {
-            this.player.addXp(10);
-          }
-          // Knockback away from blast center
-          if (monster.alive) {
-            const kdx = mpos.x === landX ? 0 : (mpos.x > landX ? 1 : -1);
-            const kdy = mpos.y === landY ? 0 : (mpos.y > landY ? 1 : -1);
-            monster.knockback(kdx, kdy, 2);
-          }
+          if (wasAlive && !monster.alive) this.player.addXp(monster.config.xpReward);
+          if (monster.alive) monster.knockback(landX, landY, 2);
         }
       }
 
-      // Check if player is in blast radius too
       const playerPos = this.gridEngine.getPosition("player");
       const playerDist = Math.max(Math.abs(playerPos.x - landX), Math.abs(playerPos.y - landY));
       if (playerDist <= radius) {
         this.player.takeDamage(damage);
-        const kdx = playerPos.x === landX ? 0 : (playerPos.x > landX ? 1 : -1);
-        const kdy = playerPos.y === landY ? 0 : (playerPos.y > landY ? 1 : -1);
-        this.player.knockback(this.gridEngine, kdx, kdy, 2);
+        this.player.knockback(this.gridEngine, playerPos.x === landX ? 0 : (playerPos.x > landX ? 1 : -1), playerPos.y === landY ? 0 : (playerPos.y > landY ? 1 : -1), 2);
       }
     });
   }
@@ -345,11 +292,7 @@ export class Moon extends Scene {
   }
 
   private initMap(): void {
-    this.map = this.make.tilemap({
-      key: "moon-map",
-      tileWidth: 16,
-      tileHeight: 16,
-    });
+    this.map = this.make.tilemap({ key: "moon-map", tileWidth: 16, tileHeight: 16 });
     this.groundTileset = this.map.addTilesetImage("moon-ground", "moon-ground");
     this.cratersTileset = this.map.addTilesetImage("moon-craters", "moon-craters");
     this.landerTileset = this.map.addTilesetImage("lander", "lander");
@@ -357,11 +300,5 @@ export class Moon extends Scene {
     this.cratersLayer = this.map.createLayer("craters", this.cratersTileset, 0, 0);
     this.landerLayer = this.map.createLayer("lander", this.landerTileset, 0, 0);
     this.landerHoverLayer = this.map.createLayer("lander-hover", this.landerTileset, 0, 0);
-  }
-
-  getRandomInt(min: integer, max: integer): integer {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 }
