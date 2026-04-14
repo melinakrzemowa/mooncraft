@@ -3,9 +3,8 @@ import { GameObjects, Scene, Tilemaps } from "phaser";
 import { Player } from "../../classes/player";
 import { ComputerTerminal } from "../../classes/computer-terminal";
 
-// Tile IDs (0-indexed) in the lander-interior tileset that represent the computer
-// These are tiles 3 and 4 in the top row of the 5x5 tileset (screens/monitors)
-const COMPUTER_TILE_IDS = new Set([3, 4, 8, 9]);
+// Tile IDs (0-indexed) that represent computer screens
+const COMPUTER_TILE_IDS = new Set([1, 2, 6, 7]);
 
 export class Lander extends Scene {
   private player!: Player;
@@ -37,22 +36,23 @@ export class Lander extends Scene {
       ],
     };
     this.gridEngine.create(this.map, gridEngineConfig);
+
     this.gridEngine.movementStarted().subscribe(({ charId, direction }: any) => {
-      if (charId == "player") {
+      if (charId === "player") {
         this.player.anims.play(direction);
       }
     });
 
     this.gridEngine.movementStopped().subscribe(({ charId, direction }: any) => {
-      if (charId == "player") {
+      if (charId === "player") {
         this.player.anims.stop();
-        this.player.anims.play("stay-down");
+        this.player.playIdle(this.gridEngine.getFacingDirection("player"));
       }
     });
 
     this.gridEngine.directionChanged().subscribe(({ charId, direction }: any) => {
-      if (charId == "player") {
-        this.player.anims.play("stay-down");
+      if (charId === "player") {
+        this.player.playIdle(direction);
       }
     });
 
@@ -69,9 +69,9 @@ export class Lander extends Scene {
   }
 
   update(): void {
-    if (!this.terminal.isVisible()) {
-      this.player.update(this.gridEngine);
+    this.player.update(this.gridEngine, this.terminal.isVisible());
 
+    if (!this.terminal.isVisible()) {
       if (this.player.x > 191 && this.player.x < 193 && this.player.y > 223 && this.player.y < 225) {
         this.registry.set("playerPosition", { x: 50, y: 50 });
         this.scene.start("moon-scene");
@@ -85,16 +85,11 @@ export class Lander extends Scene {
       return;
     }
 
-    const playerPos = this.gridEngine.getPosition("player");
     const facing = this.gridEngine.getFacingDirection("player");
+    if (facing !== Direction.UP) return;
 
-    const targetPos = { ...playerPos };
-    switch (facing) {
-      case Direction.UP: targetPos.y -= 1; break;
-      case Direction.DOWN: targetPos.y += 1; break;
-      case Direction.LEFT: targetPos.x -= 1; break;
-      case Direction.RIGHT: targetPos.x += 1; break;
-    }
+    const playerPos = this.gridEngine.getPosition("player");
+    const targetPos = { x: playerPos.x, y: playerPos.y - 1 };
 
     const tile = this.furnitureLayer.getTileAt(targetPos.x, targetPos.y);
     if (tile && COMPUTER_TILE_IDS.has(tile.index - 1)) {

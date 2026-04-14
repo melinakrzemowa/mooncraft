@@ -92,9 +92,9 @@ export class Moon extends Scene {
     });
 
     this.gridEngine.movementStopped().subscribe(({ charId, direction }: any) => {
-      if (charId == "player") {
+      if (charId === "player") {
         this.player.anims.stop();
-        this.player.anims.play("stay-down");
+        (this.player as Player).playIdle(this.gridEngine.getFacingDirection("player"));
       } else {
         npcs.get(charId).anims.stop();
         npcs.get(charId).anims.play("stay-down");
@@ -102,8 +102,8 @@ export class Moon extends Scene {
     });
 
     this.gridEngine.directionChanged().subscribe(({ charId, direction }: any) => {
-      if (charId == "player") {
-        this.player.anims.play("stay-down");
+      if (charId === "player") {
+        (this.player as Player).playIdle(direction);
       }
     });
 
