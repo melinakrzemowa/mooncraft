@@ -1,6 +1,7 @@
 import { Direction, GridEngine } from "grid-engine";
 import { Actor } from "./actor";
 import { SaveData } from "./save-manager";
+import { TouchState } from "./touch-controls";
 
 const SHOOT_COOLDOWN = 500;
 const BLASTER_DAMAGE = 12;
@@ -82,32 +83,38 @@ export class Player extends Actor {
     this.levelText.setDepth(2000);
   }
 
+  public touchState: TouchState | null = null;
+
   update(gridEngine: GridEngine, blockMovement = false): void {
+    const t = this.touchState;
+
     if (!blockMovement) {
       const cursors = this.scene.input.keyboard.createCursorKeys();
-      if (cursors.left.isDown || this.keyA.isDown) {
+      if (cursors.left.isDown || this.keyA.isDown || t?.left) {
         gridEngine.move("player", Direction.LEFT);
-      } else if (cursors.right.isDown || this.keyD.isDown) {
+      } else if (cursors.right.isDown || this.keyD.isDown || t?.right) {
         gridEngine.move("player", Direction.RIGHT);
-      } else if (cursors.up.isDown || this.keyW.isDown) {
+      } else if (cursors.up.isDown || this.keyW.isDown || t?.up) {
         gridEngine.move("player", Direction.UP);
-      } else if (cursors.down.isDown || this.keyS.isDown) {
+      } else if (cursors.down.isDown || this.keyS.isDown || t?.down) {
         gridEngine.move("player", Direction.DOWN);
       }
     }
 
-    // E key interaction (edge-triggered)
-    if (this.keyE?.isDown && !this.interactPressed) {
+    // E key / touch interaction (edge-triggered)
+    const interactDown = this.keyE?.isDown || t?.interact;
+    const interactUp = this.keyE?.isUp && !t?.interact;
+    if (interactDown && !this.interactPressed) {
       this.interactPressed = true;
       this.emit("interact");
     }
-    if (this.keyE?.isUp) {
+    if (interactUp) {
       this.interactPressed = false;
     }
 
-    // R or Space key shoot (edge-triggered)
-    const shootDown = this.keyR?.isDown || this.keySpace?.isDown;
-    const shootUp = this.keyR?.isUp && this.keySpace?.isUp;
+    // R / Space / touch shoot (edge-triggered)
+    const shootDown = this.keyR?.isDown || this.keySpace?.isDown || t?.shoot;
+    const shootUp = this.keyR?.isUp && this.keySpace?.isUp && !t?.shoot;
     if (shootDown && !this.shootPressed) {
       this.shootPressed = true;
       this.tryShoot(gridEngine);

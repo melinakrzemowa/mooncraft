@@ -2,7 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <link rel="preload" as="font" href="assets/fonts/ThaleahFat.ttf" type="font/ttf" />
     <style>
       html,
@@ -10,12 +12,16 @@
         margin: 0;
         padding: 0;
         background-color: #3a374b;
+        overflow: hidden;
+        touch-action: none;
+        -webkit-touch-callout: none;
       }
       .game {
         display: flex;
         align-items: center;
         justify-content: center;
         height: 100vh;
+        height: 100dvh;
         width: 100vw;
       }
       .version {
@@ -29,6 +35,34 @@
         z-index: 9999;
       }
 
+      #rotate-prompt {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: #3a374b;
+        color: #ffffff;
+        z-index: 99999;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: ThaleahFat, monospace;
+        font-size: 24px;
+        text-align: center;
+        gap: 16px;
+      }
+      #rotate-prompt .rotate-icon {
+        font-size: 48px;
+      }
+
+      @media (orientation: portrait) and (hover: none) and (pointer: coarse) {
+        #rotate-prompt {
+          display: flex;
+        }
+        .game {
+          display: none;
+        }
+      }
+
       @font-face {
         font-family: ThaleahFat;
         src: url("assets/fonts/ThaleahFat.ttf");
@@ -37,5 +71,9 @@
   </head>
   <body>
     <div class="game" id="game"></div>
+    <div id="rotate-prompt">
+      <div class="rotate-icon">&#x21BB;</div>
+      <div>Rotate your device<br/>to landscape</div>
+    </div>
   </body>
 </html>

@@ -3,6 +3,7 @@ import { GameObjects, Scene, Tilemaps, Physics } from "phaser";
 import { Player } from "../../classes/player";
 import { Monster } from "../../classes/monster";
 import { saveGame, clearSave, SaveData } from "../../classes/save-manager";
+import { TouchControls } from "../../classes/touch-controls";
 
 // Generate monster spawns across the map (100x50), avoiding the lander area (45-55, 45-55)
 function generateSpawns(): { x: number; y: number }[] {
@@ -52,6 +53,10 @@ export class Moon extends Scene {
     this.dead = false;
     this.initMap();
     this.player = new Player(this);
+
+    // Wire touch controls
+    const tc: TouchControls | undefined = this.registry.list.touchControls;
+    if (tc) this.player.touchState = tc.state;
 
     // TEST NPC
     this.npc = this.add.sprite(368, 416, "astronaut");
@@ -156,10 +161,12 @@ export class Moon extends Scene {
       }
     });
 
-    // Pointer movement
-    this.input.on("pointerdown", (pointer: any) => {
-      this.gridEngine.moveTo("player", { x: Math.floor(pointer.worldX / 16), y: Math.floor(pointer.worldY / 16) });
-    });
+    // Pointer movement (desktop only - conflicts with touch controls on mobile)
+    if (!tc) {
+      this.input.on("pointerdown", (pointer: any) => {
+        this.gridEngine.moveTo("player", { x: Math.floor(pointer.worldX / 16), y: Math.floor(pointer.worldY / 16) });
+      });
+    }
 
     // Blaster shooting
     this.player.on("shoot", (data: { facing: Direction; pos: { x: number; y: number }; range: number; damage: number }) => {
