@@ -145,7 +145,7 @@ export class TouchControls {
         border: 2px solid rgba(255, 255, 255, 0.5);
         background: rgba(0, 0, 0, 0.4);
         color: rgba(255, 255, 255, 0.8);
-        font-size: 18px;
+        font-size: 24px;
         border-radius: 6px;
         display: flex;
         align-items: center;
@@ -173,7 +173,7 @@ export class TouchControls {
         width: 88px;
         height: 88px;
         border-radius: 50%;
-        font-size: 20px;
+        font-size: 28px;
       }
 
       .tc-shoot {
@@ -198,7 +198,7 @@ export class TouchControls {
         background: rgba(200, 200, 0, 0.3);
         border-color: rgba(255, 255, 0, 0.6);
         font-family: ThaleahFat, monospace;
-        font-size: 22px;
+        font-size: 30px;
       }
 
       .tc-interact:active {
