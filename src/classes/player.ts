@@ -277,11 +277,10 @@ export class Player extends Actor {
 
     const width = 12;
     const height = 1.5;
-    // Center over the sprite's visual tile center
-    const cx = this.x;
-    const cy = this.y;
-    const x = cx - width / 2;
-    const y = cy - this.height / 2 - 2;
+    // Use the sprite's actual drawn position - the sprite texture is 16x16
+    // and GridEngine positions it so the bottom of the sprite aligns with the tile bottom
+    const x = this.x - width / 2;
+    const y = this.y - 16 - 1; // 16px sprite height, 1px gap above
     const ratio = this.health / this.maxHealth;
 
     this.healthBar.fillStyle(0x000000, 0.6);

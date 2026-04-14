@@ -260,7 +260,7 @@ export class Monster {
     const width = 12 * this.config.scale;
     const height = 1.5;
     const x = this.sprite.x - width / 2;
-    const y = this.sprite.y - this.sprite.height * this.config.scale / 2 - 2;
+    const y = this.sprite.y - 16 * this.config.scale - 1;
     const ratio = this.health / this.maxHealth;
 
     this.healthBar.fillStyle(0x000000, 0.6);
