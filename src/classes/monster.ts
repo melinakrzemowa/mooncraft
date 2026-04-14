@@ -259,14 +259,12 @@ export class Monster {
 
   private drawHealthBar(): void {
     this.healthBar.clear();
-    if (!this.alive || !this.gridEngine) return;
+    if (!this.alive) return;
 
-    const pos = this.gridEngine.getPosition(this.id);
     const width = 12;
     const height = 1.5;
-    const cx = pos.x * 16 + 8;
-    const x = cx - width / 2;
-    const y = pos.y * 16 - 2;
+    const x = this.sprite.x - width / 2;
+    const y = this.sprite.y - 10;
     const ratio = this.health / this.maxHealth;
 
     this.healthBar.fillStyle(0x000000, 0.6);

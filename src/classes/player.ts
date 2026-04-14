@@ -275,15 +275,13 @@ export class Player extends Actor {
 
   private drawHealthBar(): void {
     this.healthBar.clear();
-    if (!this.inCombat || !this._gridEngine) return;
+    if (!this.inCombat) return;
 
     const width = 12;
     const height = 1.5;
-    const pos = this._gridEngine.getPosition("player");
-    // Tile center = pos * 16 + 8, bar above the tile
-    const cx = pos.x * 16 + 8;
-    const x = cx - width / 2;
-    const y = pos.y * 16 - 2;
+    // sprite.x/y is updated smoothly by GridEngine during movement
+    const x = this.x - width / 2;
+    const y = this.y - 10;
     const ratio = this.health / this.maxHealth;
 
     this.healthBar.fillStyle(0x000000, 0.6);
