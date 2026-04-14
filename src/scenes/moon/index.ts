@@ -323,7 +323,8 @@ export class Moon extends Scene {
   }
 
   private initCamera(): void {
-    this.cameras.main.startFollow(this.player, false);
+    this.cameras.main.startFollow(this.player, true, 0.5, 0.5);
+    this.cameras.main.setFollowOffset(0, 0);
     this.cameras.main.zoom = 10;
   }
 

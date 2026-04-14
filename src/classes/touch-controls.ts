@@ -34,13 +34,13 @@ export class TouchControls {
       </div>
       <div class="tc-actions">
         <button class="tc-btn tc-action tc-interact" data-action="interact">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 1 1 3 0m-3 6a1.5 1.5 0 0 0-3 0v2a6 6 0 0 0 6 6h2a6 6 0 0 0 6-6v-1.5m-9-3.5v-2a1.5 1.5 0 0 1 3 0m0 0V11m0-5.5v2m0-2a1.5 1.5 0 0 1 3 0m0 0V11m0-3a1.5 1.5 0 0 1 3 0v4"/></svg>
+          <img src="https://unpkg.com/lucide-static@latest/icons/scan-search.svg" alt="interact" />
         </button>
         <button class="tc-btn tc-action tc-shoot" data-action="shoot">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          <img src="https://unpkg.com/lucide-static@latest/icons/crosshair.svg" alt="shoot" />
         </button>
         <button class="tc-btn tc-action tc-grenade" data-action="grenade">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="14" r="7"/><path d="M12 7V3m-2 4h4m-2-4l3-1"/></svg>
+          <img src="https://unpkg.com/lucide-static@latest/icons/bomb.svg" alt="grenade" />
         </button>
       </div>
     `;
@@ -179,12 +179,14 @@ export class TouchControls {
         width: 88px;
         height: 88px;
         border-radius: 50%;
-        padding: 18px;
+        padding: 22px;
       }
 
-      .tc-action svg {
+      .tc-action img {
         width: 100%;
         height: 100%;
+        filter: invert(1);
+        pointer-events: none;
       }
 
       .tc-shoot {
