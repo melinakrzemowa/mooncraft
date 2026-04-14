@@ -135,13 +135,13 @@ export class TouchControls {
       }
 
       .tc-center {
-        width: 48px;
-        height: 48px;
+        width: 64px;
+        height: 64px;
       }
 
       .tc-btn {
-        width: 48px;
-        height: 48px;
+        width: 64px;
+        height: 64px;
         border: 2px solid rgba(255, 255, 255, 0.5);
         background: rgba(0, 0, 0, 0.4);
         color: rgba(255, 255, 255, 0.8);
@@ -170,8 +170,8 @@ export class TouchControls {
       }
 
       .tc-action {
-        width: 56px;
-        height: 56px;
+        width: 72px;
+        height: 72px;
         border-radius: 50%;
         font-size: 20px;
       }
