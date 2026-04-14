@@ -3,6 +3,7 @@ import { GameObjects, Scene, Tilemaps } from "phaser";
 import { Player } from "../../classes/player";
 import { ComputerTerminal } from "../../classes/computer-terminal";
 import { saveGame, SaveData } from "../../classes/save-manager";
+import { TouchControls } from "../../classes/touch-controls";
 
 // Tile IDs (0-indexed) that represent computer screens
 const COMPUTER_TILE_IDS = new Set([1, 2, 6, 7]);
@@ -24,6 +25,8 @@ export class Lander extends Scene {
   create(): void {
     this.initMap();
     this.player = new Player(this);
+    const tc: TouchControls | undefined = this.registry.list.touchControls;
+    if (tc) this.player.touchState = tc.state;
     this.terminal = new ComputerTerminal(this);
 
     const gridEngineConfig: GridEngineConfig = {
@@ -58,11 +61,13 @@ export class Lander extends Scene {
       }
     });
 
-    // Pointer
-    this.input.on("pointerdown", (pointer: any) => {
-      if (this.terminal.isVisible()) return;
-      this.gridEngine.moveTo("player", { x: Math.floor(pointer.worldX / 16), y: Math.floor(pointer.worldY / 16) });
-    });
+    // Pointer (desktop only)
+    if (!tc) {
+      this.input.on("pointerdown", (pointer: any) => {
+        if (this.terminal.isVisible()) return;
+        this.gridEngine.moveTo("player", { x: Math.floor(pointer.worldX / 16), y: Math.floor(pointer.worldY / 16) });
+      });
+    }
 
     // Interaction hint
     this.interactHint = this.add.text(0, 0, "[E]", {
