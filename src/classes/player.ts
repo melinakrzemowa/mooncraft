@@ -299,8 +299,8 @@ export class Player extends Actor {
     const halfH = cam.height / cam.zoom / 2;
     const ox = cam.followOffset ? cam.followOffset.x : 0;
     const oy = cam.followOffset ? cam.followOffset.y : 0;
-    const left = this.x + ox - halfW;
-    const top = this.y + oy - halfH;
+    const left = this.x - ox - halfW;
+    const top = this.y - oy - halfH;
 
     // Level text top-left
     this.levelText.setPosition(left + 1, top + 1);
