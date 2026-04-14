@@ -162,7 +162,6 @@ export class Lander extends Scene {
     if (COMPUTER_TILE_IDS.has(tileId)) {
       this.terminal.show();
     } else if (MEDKIT_TILE_IDS.has(tileId)) {
-      if (this.player.health >= this.player.maxHealth) return;
       if (this.healingStation.isHealing()) return;
       this.healingStation.show(this.player.health, this.player.maxHealth, () => {
         this.player.health = this.player.maxHealth;

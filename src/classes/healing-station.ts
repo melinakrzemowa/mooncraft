@@ -17,7 +17,6 @@ export class HealingStation {
   show(currentHealth: number, maxHealth: number, onComplete: () => void): void {
     if (this.visible) return;
     this.visible = true;
-    this.healing = true;
 
     this.container.removeAll(true);
 
@@ -37,6 +36,27 @@ export class HealingStation {
     });
     title.setOrigin(0.5);
     this.container.add(title);
+
+    // Already healthy - show quick message and close
+    if (currentHealth >= maxHealth) {
+      const healthyText = this.scene.add.text(w / 2, h / 2, "ALL VITALS NOMINAL\nNO TREATMENT NEEDED", {
+        fontFamily: "monospace", fontSize: "3px", color: "#33ff33", resolution: 4, align: "center",
+      });
+      healthyText.setOrigin(0.5);
+      this.container.add(healthyText);
+
+      const closeText = this.scene.add.text(w / 2, h / 2 + 28, "press [E] to close", {
+        fontFamily: "monospace", fontSize: "2.5px", color: "#338833", resolution: 4,
+      });
+      closeText.setOrigin(0.5);
+      this.container.add(closeText);
+
+      this.container.setVisible(true);
+      this.healing = false;
+      return;
+    }
+
+    this.healing = true;
 
     // Body outline (simple pixel art person)
     const bodyX = w / 2;

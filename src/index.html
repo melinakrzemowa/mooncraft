@@ -20,7 +20,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        height: 100svh;
+        height: calc(var(--vh, 1vh) * 100);
         width: 100vw;
       }
       .version {
@@ -70,6 +70,13 @@
   </head>
   <body>
     <div class="game" id="game"></div>
+    <script>
+      function setVh() {
+        document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
+      }
+      setVh();
+      window.addEventListener('resize', setVh);
+    </script>
     <div id="rotate-prompt">
       <div class="rotate-icon">&#x21BB;</div>
       <div>Rotate your device<br/>to landscape</div>
