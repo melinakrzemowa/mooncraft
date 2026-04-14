@@ -1,5 +1,6 @@
 import { Direction, GridEngine } from "grid-engine";
 import { GameObjects, Scene } from "phaser";
+import { getEffectivePosition } from "./grid-utils";
 
 export interface MonsterConfig {
   maxHealth: number;
@@ -97,7 +98,7 @@ export class Monster {
   update(playerPos: { x: number; y: number }): { melee: number; plasmaShot: { damage: number; fromX: number; fromY: number; toX: number; toY: number } | null } {
     if (!this.alive) return { melee: 0, plasmaShot: null };
 
-    const myPos = this.gridEngine.getPosition(this.id);
+    const myPos = getEffectivePosition(this.gridEngine, this.id);
     const dist = Math.max(Math.abs(myPos.x - playerPos.x), Math.abs(myPos.y - playerPos.y));
     const now = Date.now();
 

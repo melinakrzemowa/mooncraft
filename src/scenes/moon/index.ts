@@ -4,6 +4,7 @@ import { Player } from "../../classes/player";
 import { Monster, WORM_CONFIG, BIG_WORM_CONFIG, MonsterConfig } from "../../classes/monster";
 import { saveGame, clearSave, SaveData } from "../../classes/save-manager";
 import { TouchControls } from "../../classes/touch-controls";
+import { getEffectivePosition } from "../../classes/grid-utils";
 
 // Generate small worm spawns across the map, avoiding lander area
 function generateSmallSpawns(): { x: number; y: number }[] {
@@ -156,7 +157,7 @@ export class Moon extends Scene {
     if (this.dead) return;
     this.player.update(this.gridEngine);
 
-    const playerPos = this.gridEngine.getPosition("player");
+    const playerPos = getEffectivePosition(this.gridEngine, "player");
     let anyAggroed = false;
 
     this.monsters.forEach((monster) => {
@@ -209,7 +210,7 @@ export class Moon extends Scene {
       duration: travelTime,
       onComplete: () => {
         // Cross-shaped hit: center + up/down/left/right (5 tiles)
-        const playerPos = this.gridEngine.getPosition("player");
+        const playerPos = getEffectivePosition(this.gridEngine, "player");
         const dx = Math.abs(playerPos.x - toX);
         const dy = Math.abs(playerPos.y - toY);
         const inCross = (dx === 0 && dy === 0) || (dx === 0 && dy === 1) || (dx === 1 && dy === 0);
@@ -287,7 +288,7 @@ export class Moon extends Scene {
       const ty = pos.y + dy * i;
       for (const monster of this.monsters) {
         if (!monster.alive) continue;
-        const mpos = this.gridEngine.getPosition(monster.id);
+        const mpos = getEffectivePosition(this.gridEngine, monster.id);
         if (mpos.x === tx && mpos.y === ty) {
           const wasAlive = monster.alive;
           monster.takeDamage(damage);
@@ -303,7 +304,7 @@ export class Moon extends Scene {
 
     for (const monster of this.monsters) {
       if (!monster.alive) continue;
-      const mpos = this.gridEngine.getPosition(monster.id);
+      const mpos = getEffectivePosition(this.gridEngine, monster.id);
       const dist = Math.max(Math.abs(mpos.x - landX), Math.abs(mpos.y - landY));
       if (dist <= radius) {
         const wasAlive = monster.alive;
@@ -313,7 +314,7 @@ export class Moon extends Scene {
       }
     }
 
-    const playerPos = this.gridEngine.getPosition("player");
+    const playerPos = getEffectivePosition(this.gridEngine, "player");
     const playerDist = Math.max(Math.abs(playerPos.x - landX), Math.abs(playerPos.y - landY));
     if (playerDist <= radius) {
       this.player.takeDamage(damage);

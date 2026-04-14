@@ -2,6 +2,7 @@ import { Direction, GridEngine } from "grid-engine";
 import { Actor } from "./actor";
 import { SaveData } from "./save-manager";
 import { TouchState } from "./touch-controls";
+import { getEffectivePosition } from "./grid-utils";
 
 const SHOOT_COOLDOWN = 500;
 const BLASTER_DAMAGE = 12;
@@ -151,7 +152,7 @@ export class Player extends Actor {
     this.lastShootTime = now;
 
     const facing = gridEngine.getFacingDirection("player");
-    const pos = gridEngine.getPosition("player");
+    const pos = getEffectivePosition(gridEngine, "player");
 
     this.emit("shoot", { facing, pos, range: BLASTER_RANGE, damage: BLASTER_DAMAGE });
     this.showBlasterEffect(facing, pos);
@@ -163,7 +164,7 @@ export class Player extends Actor {
     this.lastGrenadeTime = now;
 
     const facing = gridEngine.getFacingDirection("player");
-    const pos = gridEngine.getPosition("player");
+    const pos = getEffectivePosition(gridEngine, "player");
     const dx = facing === Direction.LEFT ? -1 : facing === Direction.RIGHT ? 1 : 0;
     const dy = facing === Direction.UP ? -1 : facing === Direction.DOWN ? 1 : 0;
 
