@@ -2,15 +2,30 @@ import { Direction, GridEngine, GridEngineConfig } from "grid-engine";
 import { GameObjects, Scene, Tilemaps, Physics } from "phaser";
 import { Player } from "../../classes/player";
 import { Monster } from "../../classes/monster";
+import { saveGame, clearSave, SaveData } from "../../classes/save-manager";
 
-// Monster spawn positions (spread around the map, away from spawn point 49,51)
-const MONSTER_SPAWNS = [
-  { x: 30, y: 30 }, { x: 35, y: 45 }, { x: 60, y: 35 }, { x: 70, y: 40 },
-  { x: 45, y: 25 }, { x: 55, y: 48 }, { x: 25, y: 40 }, { x: 75, y: 30 },
-  { x: 20, y: 20 }, { x: 40, y: 35 }, { x: 65, y: 25 }, { x: 80, y: 45 },
-  { x: 15, y: 35 }, { x: 50, y: 20 }, { x: 85, y: 35 }, { x: 30, y: 48 },
-  { x: 55, y: 30 }, { x: 42, y: 42 }, { x: 68, y: 48 }, { x: 22, y: 28 },
-];
+// Generate monster spawns across the map (100x50), avoiding the lander area (45-55, 45-55)
+function generateSpawns(): { x: number; y: number }[] {
+  const spawns: { x: number; y: number }[] = [];
+  const rng = (min: number, max: number) => Math.floor(min + (max - min) * ((Math.sin(spawns.length * 127.1 + 311.7) * 0.5 + 0.5)));
+
+  for (let gx = 0; gx < 10; gx++) {
+    for (let gy = 0; gy < 5; gy++) {
+      const baseX = gx * 10 + 3;
+      const baseY = gy * 10 + 3;
+      const x = baseX + rng(0, 6);
+      const y = baseY + rng(0, 6);
+      // Skip lander area
+      if (x >= 45 && x <= 55 && y >= 45 && y <= 55) continue;
+      // Stay in bounds
+      if (x < 2 || x > 97 || y < 2 || y > 47) continue;
+      spawns.push({ x, y });
+    }
+  }
+  return spawns;
+}
+
+const MONSTER_SPAWNS = generateSpawns();
 
 export class Moon extends Scene {
   private player!: Player;
@@ -26,6 +41,7 @@ export class Moon extends Scene {
   private gridEngine!: GridEngine;
   private monsters: Monster[] = [];
   private dead = false;
+  private lastSavePos = { x: 0, y: 0 };
 
   constructor() {
     super("moon-scene");
@@ -69,9 +85,13 @@ export class Moon extends Scene {
       ],
     };
 
-    // Create monsters
+    // Create all monsters (dead ones start hidden and schedule respawn)
+    const save: SaveData | undefined = this.registry.list.saveData;
+    const deadMonsters = new Set(save?.deadMonsters || []);
+
     MONSTER_SPAWNS.forEach((spawn, i) => {
-      const monster = new Monster(this, `monster_${i}`);
+      const id = `monster_${i}`;
+      const monster = new Monster(this, id, spawn);
       this.monsters.push(monster);
 
       gridEngineConfig.characters.push({
@@ -99,8 +119,8 @@ export class Moon extends Scene {
 
     this.gridEngine.create(this.map, gridEngineConfig);
 
-    // Init monster AI
-    this.monsters.forEach((m) => m.init(this.gridEngine));
+    // Init monster AI (dead ones from save start dead with respawn timer)
+    this.monsters.forEach((m) => m.init(this.gridEngine, deadMonsters.has(m.id)));
 
     // NPC random movement
     for (let x = 35; x <= 40; x++) {
@@ -121,6 +141,9 @@ export class Moon extends Scene {
       if (charId === "player") {
         this.player.anims.stop();
         this.player.playIdle(this.gridEngine.getFacingDirection("player"));
+        // Save on every player move
+        const pos = this.gridEngine.getPosition("player");
+        this.saveState("moon-scene", pos.x, pos.y);
       } else if (npcs.has(charId)) {
         npcs.get(charId).anims.stop();
         npcs.get(charId).anims.play("stay-down");
@@ -146,6 +169,9 @@ export class Moon extends Scene {
     this.physics.add.collider(this.player, this.cratersLayer);
     this.physics.add.collider(this.player, this.landerLayer);
     this.initCamera();
+
+    // Set initial save pos
+    this.lastSavePos = { x: this.registry.list.playerPosition.x, y: this.registry.list.playerPosition.y };
   }
 
   update(): void {
@@ -178,13 +204,33 @@ export class Moon extends Scene {
 
     // Scene transition to lander
     if (this.player.x > 799 && this.player.x < 801 && this.player.y > 783 && this.player.y < 785) {
+      this.saveState("lander-scene", 12, 13);
       this.registry.set("playerPosition", { x: 12, y: 13 });
       this.scene.start("lander-scene");
     }
   }
 
+  private saveState(scene: string, px: number, py: number): void {
+    const deadMonsters = this.monsters.filter((m) => !m.alive).map((m) => m.id);
+
+    const data: SaveData = {
+      scene,
+      playerX: px,
+      playerY: py,
+      level: this.player.level,
+      xp: this.player.xp,
+      health: this.player.health,
+      maxHealth: this.player.maxHealth,
+      deadMonsters,
+    };
+    saveGame(data);
+    this.registry.set("saveData", data);
+  }
+
   private showDeathScreen(): void {
     this.dead = true;
+    clearSave();
+    this.registry.set("saveData", undefined);
 
     const cam = this.cameras.main;
     const cx = cam.scrollX + cam.width / cam.zoom / 2;
@@ -238,7 +284,7 @@ export class Moon extends Scene {
           if (wasAlive && !monster.alive) {
             this.player.addXp(10);
           }
-          return; // Hit first monster in line
+          return;
         }
       }
     }

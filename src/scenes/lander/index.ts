@@ -2,6 +2,7 @@ import { Direction, GridEngine, GridEngineConfig } from "grid-engine";
 import { GameObjects, Scene, Tilemaps } from "phaser";
 import { Player } from "../../classes/player";
 import { ComputerTerminal } from "../../classes/computer-terminal";
+import { saveGame, SaveData } from "../../classes/save-manager";
 
 // Tile IDs (0-indexed) that represent computer screens
 const COMPUTER_TILE_IDS = new Set([1, 2, 6, 7]);
@@ -89,6 +90,20 @@ export class Lander extends Scene {
       this.updateInteractHint();
 
       if (this.player.x > 191 && this.player.x < 193 && this.player.y > 223 && this.player.y < 225) {
+        // Save state when leaving lander
+        const prevSave: SaveData | undefined = this.registry.list.saveData;
+        const data: SaveData = {
+          scene: "moon-scene",
+          playerX: 50,
+          playerY: 50,
+          level: this.player.level,
+          xp: this.player.xp,
+          health: this.player.health,
+          maxHealth: this.player.maxHealth,
+          deadMonsters: prevSave?.deadMonsters || [],
+        };
+        saveGame(data);
+        this.registry.set("saveData", data);
         this.registry.set("playerPosition", { x: 50, y: 50 });
         this.scene.start("moon-scene");
       }

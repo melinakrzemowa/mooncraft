@@ -6,7 +6,8 @@ const ATTACK_RANGE = 1;
 const ATTACK_COOLDOWN = 1500;
 const ATTACK_DAMAGE = 8;
 const WANDER_DELAY = 3000;
-const CHASE_RETARGET_DELAY = 800;
+const RESPAWN_MIN = 60000;
+const RESPAWN_MAX = 120000;
 
 export class Monster {
   public sprite: GameObjects.Sprite;
@@ -14,18 +15,20 @@ export class Monster {
   public health: number;
   public maxHealth: number;
   public alive = true;
+  public spawnPos: { x: number; y: number };
 
   private scene: Scene;
   private gridEngine!: GridEngine;
   private aggroed = false;
   private lastAttackTime = 0;
-  private lastChaseTime = 0;
   private wanderTimer: Phaser.Time.TimerEvent | null = null;
+  private respawnTimer: Phaser.Time.TimerEvent | null = null;
   private healthBar: GameObjects.Graphics;
 
-  constructor(scene: Scene, id: string, maxHealth = 30) {
+  constructor(scene: Scene, id: string, spawnPos: { x: number; y: number }, maxHealth = 30) {
     this.scene = scene;
     this.id = id;
+    this.spawnPos = spawnPos;
     this.maxHealth = maxHealth;
     this.health = maxHealth;
 
@@ -36,19 +39,28 @@ export class Monster {
     this.healthBar.setDepth(998);
   }
 
-  init(gridEngine: GridEngine): void {
+  init(gridEngine: GridEngine, startDead = false): void {
     this.gridEngine = gridEngine;
+
+    if (startDead) {
+      this.alive = false;
+      this.sprite.setVisible(false);
+      this.healthBar.clear();
+      this.scheduleRespawn();
+      return;
+    }
+
     this.startWandering();
     this.sprite.anims.play("worm-idle");
 
     gridEngine.movementStarted().subscribe(({ charId }: any) => {
-      if (charId === this.id) {
+      if (charId === this.id && this.alive) {
         this.sprite.anims.play("worm-walk");
       }
     });
 
     gridEngine.movementStopped().subscribe(({ charId }: any) => {
-      if (charId === this.id && !this.aggroed) {
+      if (charId === this.id && this.alive && !this.aggroed) {
         this.sprite.anims.play("worm-idle");
       }
     });
@@ -104,16 +116,54 @@ export class Monster {
 
   private die(): void {
     this.alive = false;
+    this.aggroed = false;
     this.stopWandering();
-    this.healthBar.destroy();
+    this.healthBar.clear();
     this.scene.tweens.add({
       targets: this.sprite,
       alpha: 0,
       duration: 300,
       onComplete: () => {
-        this.sprite.destroy();
+        this.sprite.setVisible(false);
+        this.sprite.setAlpha(1);
+        this.scheduleRespawn();
       },
     });
+  }
+
+  private scheduleRespawn(): void {
+    const delay = RESPAWN_MIN + Math.random() * (RESPAWN_MAX - RESPAWN_MIN);
+    this.respawnTimer = this.scene.time.delayedCall(delay, () => {
+      this.tryRespawn();
+    });
+  }
+
+  private tryRespawn(): void {
+    // Check if player is nearby
+    const playerPos = this.gridEngine.getPosition("player");
+    const dist = Math.max(
+      Math.abs(this.spawnPos.x - playerPos.x),
+      Math.abs(this.spawnPos.y - playerPos.y)
+    );
+
+    if (dist <= AGGRO_RANGE * 2) {
+      // Player too close, try again in 10s
+      this.respawnTimer = this.scene.time.delayedCall(10000, () => {
+        this.tryRespawn();
+      });
+      return;
+    }
+
+    this.alive = true;
+    this.health = this.maxHealth;
+    this.aggroed = false;
+    this.lastAttackTime = 0;
+
+    // Move back to spawn position
+    this.gridEngine.setPosition(this.id, this.spawnPos);
+    this.sprite.setVisible(true);
+    this.sprite.anims.play("worm-idle");
+    this.startWandering();
   }
 
   private flashRed(): void {
@@ -124,7 +174,6 @@ export class Monster {
   }
 
   private chasePlayer(playerPos: { x: number; y: number }): void {
-    // Only issue a new moveTo when not already moving, to avoid cancelling mid-step
     if (!this.gridEngine.isMoving(this.id)) {
       this.gridEngine.moveTo(this.id, playerPos, {
         noPathFoundStrategy: "CLOSEST_REACHABLE" as any,

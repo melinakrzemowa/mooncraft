@@ -1,5 +1,6 @@
 import { Direction, GridEngine } from "grid-engine";
 import { Actor } from "./actor";
+import { SaveData } from "./save-manager";
 
 const SHOOT_COOLDOWN = 500;
 const BLASTER_DAMAGE = 12;
@@ -35,9 +36,19 @@ export class Player extends Actor {
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0, "astronaut");
 
-    this.maxHealth = BASE_HP;
-    this.health = this.maxHealth;
-    this.xpToNext = BASE_XP;
+    // Restore from save if available
+    const save: SaveData | undefined = scene.registry.list.saveData;
+    if (save) {
+      this.level = save.level;
+      this.xp = save.xp;
+      this.maxHealth = save.maxHealth;
+      this.health = save.health;
+      this.xpToNext = Math.floor(BASE_XP * this.level * Math.pow(XP_GROWTH, this.level - 1));
+    } else {
+      this.maxHealth = BASE_HP;
+      this.health = this.maxHealth;
+      this.xpToNext = BASE_XP;
+    }
 
     // KEYS
     this.keyW = this.scene.input.keyboard.addKey("W");
@@ -62,7 +73,7 @@ export class Player extends Actor {
     this.xpBar = scene.add.graphics();
     this.xpBar.setDepth(2000);
 
-    this.levelText = scene.add.text(0, 0, "Lv 1", {
+    this.levelText = scene.add.text(0, 0, `Lv ${this.level}`, {
       fontFamily: "ThaleahFat",
       fontSize: "5px",
       color: "#ffffff",
