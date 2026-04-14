@@ -6,10 +6,10 @@ import { HealingStation } from "../../classes/healing-station";
 import { saveGame, SaveData } from "../../classes/save-manager";
 import { TouchControls } from "../../classes/touch-controls";
 
-// Computer screen tile IDs (0-indexed)
-const COMPUTER_TILE_IDS = new Set([1, 2, 6, 7]);
-// Medkit tile IDs -- right wall (tile ID 9 at x=14,y=11) and left wall (tile ID 5 at x=10,y=11, tile ID 15 at x=10,y=13)
-const MEDKIT_TILE_IDS = new Set([5, 9, 15]);
+// Computer: top-left of north wall (tile ID 1 at x=11,y=10)
+const COMPUTER_TILE_IDS = new Set([1]);
+// Medkit: top-right of north wall (tile ID 3 at x=13,y=10)
+const MEDKIT_TILE_IDS = new Set([3]);
 
 export class Lander extends Scene {
   private player!: Player;
