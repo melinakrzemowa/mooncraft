@@ -173,6 +173,11 @@ export class Moon extends Scene {
       this.handleShoot(data);
     });
 
+    // Grenade
+    this.player.on("grenade", (data: { landX: number; landY: number; radius: number; damage: number }) => {
+      this.handleGrenade(data);
+    });
+
     this.physics.add.collider(this.player, this.cratersLayer);
     this.physics.add.collider(this.player, this.landerLayer);
     this.initCamera();
@@ -295,6 +300,43 @@ export class Moon extends Scene {
         }
       }
     }
+  }
+
+  private handleGrenade(data: { landX: number; landY: number; radius: number; damage: number }): void {
+    const { landX, landY, radius, damage } = data;
+
+    // Delay to match projectile travel time
+    this.time.delayedCall(300, () => {
+      // Damage and knockback everything in radius
+      for (const monster of this.monsters) {
+        if (!monster.alive) continue;
+        const mpos = this.gridEngine.getPosition(monster.id);
+        const dist = Math.max(Math.abs(mpos.x - landX), Math.abs(mpos.y - landY));
+        if (dist <= radius) {
+          const wasAlive = monster.alive;
+          monster.takeDamage(damage);
+          if (wasAlive && !monster.alive) {
+            this.player.addXp(10);
+          }
+          // Knockback away from blast center
+          if (monster.alive) {
+            const kdx = mpos.x === landX ? 0 : (mpos.x > landX ? 1 : -1);
+            const kdy = mpos.y === landY ? 0 : (mpos.y > landY ? 1 : -1);
+            monster.knockback(kdx, kdy, 2);
+          }
+        }
+      }
+
+      // Check if player is in blast radius too
+      const playerPos = this.gridEngine.getPosition("player");
+      const playerDist = Math.max(Math.abs(playerPos.x - landX), Math.abs(playerPos.y - landY));
+      if (playerDist <= radius) {
+        this.player.takeDamage(damage);
+        const kdx = playerPos.x === landX ? 0 : (playerPos.x > landX ? 1 : -1);
+        const kdy = playerPos.y === landY ? 0 : (playerPos.y > landY ? 1 : -1);
+        this.player.knockback(this.gridEngine, kdx, kdy, 2);
+      }
+    });
   }
 
   private initCamera(): void {

@@ -106,6 +106,16 @@ export class Monster {
     return this.aggroed;
   }
 
+  knockback(dx: number, dy: number, tiles: number): void {
+    if (!this.alive) return;
+    const pos = this.gridEngine.getPosition(this.id);
+    const nx = dx !== 0 ? pos.x + dx * tiles : pos.x;
+    const ny = dy !== 0 ? pos.y + dy * tiles : pos.y;
+    this.gridEngine.moveTo(this.id, { x: nx, y: ny }, {
+      noPathFoundStrategy: "CLOSEST_REACHABLE" as any,
+    });
+  }
+
   private tryAttack(): number {
     const now = Date.now();
     if (now - this.lastAttackTime < ATTACK_COOLDOWN) return 0;
@@ -119,6 +129,8 @@ export class Monster {
     this.aggroed = false;
     this.stopWandering();
     this.healthBar.clear();
+    // Remove collision so player can walk through
+    this.gridEngine.setPosition(this.id, { x: -1, y: -1 });
     this.scene.tweens.add({
       targets: this.sprite,
       alpha: 0,

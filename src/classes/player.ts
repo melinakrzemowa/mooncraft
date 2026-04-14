@@ -6,6 +6,10 @@ import { TouchState } from "./touch-controls";
 const SHOOT_COOLDOWN = 500;
 const BLASTER_DAMAGE = 12;
 const BLASTER_RANGE = 4;
+const GRENADE_COOLDOWN = 10000;
+const GRENADE_DAMAGE = 24;
+const GRENADE_RANGE = 4;
+const GRENADE_BLAST_RADIUS = 2;
 const BASE_HP = 100;
 const HP_PER_LEVEL = 15;
 const BASE_XP = 50;
@@ -18,10 +22,13 @@ export class Player extends Actor {
   private keyD: Phaser.Input.Keyboard.Key;
   private keyE: Phaser.Input.Keyboard.Key;
   private keyR: Phaser.Input.Keyboard.Key;
+  private keyF: Phaser.Input.Keyboard.Key;
   private keySpace: Phaser.Input.Keyboard.Key;
   private interactPressed = false;
   private shootPressed = false;
+  private grenadePressed = false;
   private lastShootTime = 0;
+  private lastGrenadeTime = 0;
 
   public health: number;
   public maxHealth: number;
@@ -58,6 +65,7 @@ export class Player extends Actor {
     this.keyD = this.scene.input.keyboard.addKey("D");
     this.keyE = this.scene.input.keyboard.addKey("E");
     this.keyR = this.scene.input.keyboard.addKey("R");
+    this.keyF = this.scene.input.keyboard.addKey("F");
     this.keySpace = this.scene.input.keyboard.addKey("SPACE");
 
     // PHYSICS
@@ -123,6 +131,17 @@ export class Player extends Actor {
       this.shootPressed = false;
     }
 
+    // F / touch grenade (edge-triggered)
+    const grenadeDown = this.keyF?.isDown || t?.grenade;
+    const grenadeUp = this.keyF?.isUp && !t?.grenade;
+    if (grenadeDown && !this.grenadePressed) {
+      this.grenadePressed = true;
+      this.tryGrenade(gridEngine);
+    }
+    if (grenadeUp) {
+      this.grenadePressed = false;
+    }
+
     this.drawHealthBar();
     this.drawXpBar();
   }
@@ -139,9 +158,69 @@ export class Player extends Actor {
     this.showBlasterEffect(facing, pos);
   }
 
+  tryGrenade(gridEngine: GridEngine): void {
+    const now = Date.now();
+    if (now - this.lastGrenadeTime < GRENADE_COOLDOWN) return;
+    this.lastGrenadeTime = now;
+
+    const facing = gridEngine.getFacingDirection("player");
+    const pos = gridEngine.getPosition("player");
+    const dx = facing === Direction.LEFT ? -1 : facing === Direction.RIGHT ? 1 : 0;
+    const dy = facing === Direction.UP ? -1 : facing === Direction.DOWN ? 1 : 0;
+
+    // Grenade lands at GRENADE_RANGE tiles ahead
+    const landX = pos.x + dx * GRENADE_RANGE;
+    const landY = pos.y + dy * GRENADE_RANGE;
+
+    this.emit("grenade", {
+      landX, landY, radius: GRENADE_BLAST_RADIUS, damage: GRENADE_DAMAGE,
+    });
+    this.showGrenadeEffect(pos, landX, landY);
+  }
+
+  private showGrenadeEffect(from: { x: number; y: number }, lx: number, ly: number): void {
+    // Projectile arc
+    const startX = from.x * 16 + 8;
+    const startY = from.y * 16 + 8;
+    const endX = lx * 16 + 8;
+    const endY = ly * 16 + 8;
+
+    const proj = this.scene.add.circle(startX, startY, 1.5, 0xff6600);
+    proj.setDepth(997);
+
+    this.scene.tweens.add({
+      targets: proj,
+      x: endX,
+      y: endY,
+      duration: 300,
+      onComplete: () => {
+        proj.destroy();
+        // Explosion flash
+        const blast = this.scene.add.circle(endX, endY, GRENADE_BLAST_RADIUS * 16, 0xff4400, 0.5);
+        blast.setDepth(997);
+        this.scene.tweens.add({
+          targets: blast,
+          alpha: 0,
+          scale: 1.5,
+          duration: 300,
+          onComplete: () => blast.destroy(),
+        });
+      },
+    });
+  }
+
   takeDamage(amount: number): void {
     this.health = Math.max(0, this.health - amount);
     this.flashRed();
+  }
+
+  knockback(gridEngine: GridEngine, dx: number, dy: number, tiles: number): void {
+    const pos = gridEngine.getPosition("player");
+    const nx = dx !== 0 ? pos.x + dx * tiles : pos.x;
+    const ny = dy !== 0 ? pos.y + dy * tiles : pos.y;
+    gridEngine.moveTo("player", { x: nx, y: ny }, {
+      noPathFoundStrategy: "CLOSEST_REACHABLE" as any,
+    });
   }
 
   addXp(amount: number): void {

@@ -5,6 +5,7 @@ export interface TouchState {
   right: boolean;
   shoot: boolean;
   interact: boolean;
+  grenade: boolean;
 }
 
 const isTouchDevice = () => "ontouchstart" in window || navigator.maxTouchPoints > 0;
@@ -12,7 +13,7 @@ const isTouchDevice = () => "ontouchstart" in window || navigator.maxTouchPoints
 export class TouchControls {
   public state: TouchState = {
     up: false, down: false, left: false, right: false,
-    shoot: false, interact: false,
+    shoot: false, interact: false, grenade: false,
   };
 
   private container: HTMLDivElement;
@@ -33,6 +34,7 @@ export class TouchControls {
       </div>
       <div class="tc-actions">
         <button class="tc-btn tc-action tc-shoot" data-action="shoot">&#9733;</button>
+        <button class="tc-btn tc-action tc-grenade" data-action="grenade">&#9679;</button>
         <button class="tc-btn tc-action tc-interact" data-action="interact">E</button>
       </div>
     `;
@@ -79,7 +81,7 @@ export class TouchControls {
     }
 
     // Action buttons
-    const actions = ["shoot", "interact"] as const;
+    const actions = ["shoot", "interact", "grenade"] as const;
     for (const action of actions) {
       const btn = this.container.querySelector(`[data-action="${action}"]`) as HTMLElement;
       if (!btn) continue;
@@ -181,6 +183,15 @@ export class TouchControls {
 
       .tc-shoot:active {
         background: rgba(0, 255, 255, 0.5);
+      }
+
+      .tc-grenade {
+        background: rgba(200, 100, 0, 0.3);
+        border-color: rgba(255, 140, 0, 0.6);
+      }
+
+      .tc-grenade:active {
+        background: rgba(255, 140, 0, 0.5);
       }
 
       .tc-interact {
