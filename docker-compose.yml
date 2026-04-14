@@ -1,6 +1,6 @@
 services:
   mooncraft:
-    image: registry.melinakrzemowa.pl/mooncraft:${VERSION}
+    image: ghcr.io/melinakrzemowa/mooncraft:${VERSION}
     container_name: mooncraft
     ports:
       - "4001:80"
