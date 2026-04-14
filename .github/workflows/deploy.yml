@@ -53,6 +53,8 @@ jobs:
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ steps.previoustag.outputs.tag }}
             ${{ env.IMAGE_NAME }}:${{ steps.previoustag.outputs.tag }}-${{ steps.get_hash.outputs.HASH }}
+          build-args: |
+            APP_VERSION=${{ steps.previoustag.outputs.tag }}-${{ steps.get_hash.outputs.HASH }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require("path");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const { DefinePlugin } = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const isProd = process.env.NODE_ENV === "production";
@@ -70,6 +71,9 @@ const config = {
     ],
   },
   plugins: [
+    new DefinePlugin({
+      __APP_VERSION__: JSON.stringify(process.env.APP_VERSION || "dev"),
+    }),
     new CleanWebpackPlugin(),
     new CopyWebpackPlugin({ // green square issue
       patterns: [

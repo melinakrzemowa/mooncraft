@@ -15,6 +15,8 @@ COPY tsconfig.json webpack.config.js index.d.ts ./
 COPY src ./src
 
 # Build the application
+ARG APP_VERSION=dev
+ENV APP_VERSION=${APP_VERSION}
 RUN yarn build
 
 # Production stage - lightweight image with only static files

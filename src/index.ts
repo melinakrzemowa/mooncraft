@@ -41,3 +41,9 @@ const gameConfig: Types.Core.GameConfig = {
 };
 
 window.game = new Game(gameConfig);
+
+declare const __APP_VERSION__: string;
+const versionEl = document.createElement("div");
+versionEl.className = "version";
+versionEl.textContent = __APP_VERSION__;
+document.body.appendChild(versionEl);
