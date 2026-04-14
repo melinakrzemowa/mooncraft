@@ -1,20 +1,14 @@
-import { Direction, GridEngine, GridEngineConfig } from "grid-engine";
-import { GameObjects, Scene, Tilemaps } from "phaser";
+import { GridEngine, GridEngineConfig } from "grid-engine";
+import { GameObjects, Scene, Tilemaps, Physics } from "phaser";
 import { Player } from "../../classes/player";
-import { ComputerTerminal } from "../../classes/computer-terminal";
-
-// Tile IDs (0-indexed) in the lander-interior tileset that represent the computer
-// These are tiles 3 and 4 in the top row of the 5x5 tileset (screens/monitors)
-const COMPUTER_TILE_IDS = new Set([3, 4, 8, 9]);
 
 export class Lander extends Scene {
-  private player!: Player;
+  private player!: GameObjects.Sprite;
   private map!: Tilemaps.Tilemap;
   private landerTileset!: Tilemaps.Tileset;
   private groundLayer!: Tilemaps.TilemapLayer;
   private furnitureLayer!: Tilemaps.TilemapLayer;
   private gridEngine!: GridEngine;
-  private terminal!: ComputerTerminal;
 
   constructor() {
     super("lander-scene");
@@ -23,7 +17,6 @@ export class Lander extends Scene {
   create(): void {
     this.initMap();
     this.player = new Player(this);
-    this.terminal = new ComputerTerminal(this);
 
     const gridEngineConfig: GridEngineConfig = {
       collisionTilePropertyName: "collides",
@@ -57,48 +50,19 @@ export class Lander extends Scene {
     });
 
     // Pointer
-    this.input.on("pointerdown", (pointer: any) => {
-      if (this.terminal.isVisible()) return;
+    this.input.on("pointerdown", (pointer: any, gameObject: any) => {
       this.gridEngine.moveTo("player", { x: Math.floor(pointer.worldX / 16), y: Math.floor(pointer.worldY / 16) });
     });
-
-    // Interaction
-    this.player.on("interact", () => this.handleInteract());
 
     this.initCamera();
   }
 
   update(): void {
-    if (!this.terminal.isVisible()) {
-      this.player.update(this.gridEngine);
+    this.player.update(this.gridEngine);
 
-      if (this.player.x > 191 && this.player.x < 193 && this.player.y > 223 && this.player.y < 225) {
-        this.registry.set("playerPosition", { x: 50, y: 50 });
-        this.scene.start("moon-scene");
-      }
-    }
-  }
-
-  private handleInteract(): void {
-    if (this.terminal.isVisible()) {
-      this.terminal.hide();
-      return;
-    }
-
-    const playerPos = this.gridEngine.getPosition("player");
-    const facing = this.gridEngine.getFacingDirection("player");
-
-    const targetPos = { ...playerPos };
-    switch (facing) {
-      case Direction.UP: targetPos.y -= 1; break;
-      case Direction.DOWN: targetPos.y += 1; break;
-      case Direction.LEFT: targetPos.x -= 1; break;
-      case Direction.RIGHT: targetPos.x += 1; break;
-    }
-
-    const tile = this.furnitureLayer.getTileAt(targetPos.x, targetPos.y);
-    if (tile && COMPUTER_TILE_IDS.has(tile.index - 1)) {
-      this.terminal.show();
+    if (this.player.x > 191 && this.player.x < 193 && this.player.y > 223 && this.player.y < 225) {
+      this.registry.set("playerPosition", { x: 50, y: 50 });
+      this.scene.start("moon-scene");
     }
   }
 
