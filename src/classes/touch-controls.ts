@@ -170,8 +170,8 @@ export class TouchControls {
       }
 
       .tc-action {
-        width: 72px;
-        height: 72px;
+        width: 88px;
+        height: 88px;
         border-radius: 50%;
         font-size: 20px;
       }
