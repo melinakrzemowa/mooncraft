@@ -22,6 +22,11 @@ export class LoadingScene extends Scene {
     this.load.baseURL = "assets/";
     this.load.atlas("astronaut", "spritesheets/astronaut.png", "spritesheets/astronaut_atlas.json");
 
+    this.load.spritesheet("enemy_worm", "spritesheets/enemy_worm.png", {
+      frameWidth: 16,
+      frameHeight: 16,
+    });
+
     // moon scene:
     this.load.image({
       key: "moon-ground",

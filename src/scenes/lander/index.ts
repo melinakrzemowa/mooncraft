@@ -14,6 +14,7 @@ export class Lander extends Scene {
   private furnitureLayer!: Tilemaps.TilemapLayer;
   private gridEngine!: GridEngine;
   private terminal!: ComputerTerminal;
+  private interactHint!: Phaser.GameObjects.Text;
 
   constructor() {
     super("lander-scene");
@@ -62,6 +63,19 @@ export class Lander extends Scene {
       this.gridEngine.moveTo("player", { x: Math.floor(pointer.worldX / 16), y: Math.floor(pointer.worldY / 16) });
     });
 
+    // Interaction hint
+    this.interactHint = this.add.text(0, 0, "[E]", {
+      fontFamily: "monospace",
+      fontSize: "3px",
+      color: "#ffffff",
+      backgroundColor: "#00000088",
+      padding: { x: 1, y: 0 },
+      resolution: 4,
+    });
+    this.interactHint.setOrigin(0.5, 1);
+    this.interactHint.setVisible(false);
+    this.interactHint.setDepth(999);
+
     // Interaction
     this.player.on("interact", () => this.handleInteract());
 
@@ -72,10 +86,33 @@ export class Lander extends Scene {
     this.player.update(this.gridEngine, this.terminal.isVisible());
 
     if (!this.terminal.isVisible()) {
+      this.updateInteractHint();
+
       if (this.player.x > 191 && this.player.x < 193 && this.player.y > 223 && this.player.y < 225) {
         this.registry.set("playerPosition", { x: 50, y: 50 });
         this.scene.start("moon-scene");
       }
+    } else {
+      this.interactHint.setVisible(false);
+    }
+  }
+
+  private updateInteractHint(): void {
+    const facing = this.gridEngine.getFacingDirection("player");
+    if (facing !== Direction.UP) {
+      this.interactHint.setVisible(false);
+      return;
+    }
+
+    const playerPos = this.gridEngine.getPosition("player");
+    const targetPos = { x: playerPos.x, y: playerPos.y - 1 };
+    const tile = this.furnitureLayer.getTileAt(targetPos.x, targetPos.y);
+
+    if (tile && COMPUTER_TILE_IDS.has(tile.index - 1)) {
+      this.interactHint.setPosition(this.player.x, this.player.y - 10);
+      this.interactHint.setVisible(true);
+    } else {
+      this.interactHint.setVisible(false);
     }
   }
 
