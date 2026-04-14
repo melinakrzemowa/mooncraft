@@ -1,14 +1,19 @@
-import { GridEngine, GridEngineConfig } from "grid-engine";
-import { GameObjects, Scene, Tilemaps, Physics } from "phaser";
+import { Direction, GridEngine, GridEngineConfig } from "grid-engine";
+import { GameObjects, Scene, Tilemaps } from "phaser";
 import { Player } from "../../classes/player";
+import { ComputerTerminal } from "../../classes/computer-terminal";
+
+// Tile IDs (0-indexed) that represent computer screens
+const COMPUTER_TILE_IDS = new Set([1, 2, 6, 7]);
 
 export class Lander extends Scene {
-  private player!: GameObjects.Sprite;
+  private player!: Player;
   private map!: Tilemaps.Tilemap;
   private landerTileset!: Tilemaps.Tileset;
   private groundLayer!: Tilemaps.TilemapLayer;
   private furnitureLayer!: Tilemaps.TilemapLayer;
   private gridEngine!: GridEngine;
+  private terminal!: ComputerTerminal;
 
   constructor() {
     super("lander-scene");
@@ -17,6 +22,7 @@ export class Lander extends Scene {
   create(): void {
     this.initMap();
     this.player = new Player(this);
+    this.terminal = new ComputerTerminal(this);
 
     const gridEngineConfig: GridEngineConfig = {
       collisionTilePropertyName: "collides",
@@ -30,39 +36,64 @@ export class Lander extends Scene {
       ],
     };
     this.gridEngine.create(this.map, gridEngineConfig);
+
     this.gridEngine.movementStarted().subscribe(({ charId, direction }: any) => {
-      if (charId == "player") {
+      if (charId === "player") {
         this.player.anims.play(direction);
       }
     });
 
     this.gridEngine.movementStopped().subscribe(({ charId, direction }: any) => {
-      if (charId == "player") {
+      if (charId === "player") {
         this.player.anims.stop();
-        this.player.anims.play("stay-down");
+        this.player.playIdle(this.gridEngine.getFacingDirection("player"));
       }
     });
 
     this.gridEngine.directionChanged().subscribe(({ charId, direction }: any) => {
-      if (charId == "player") {
-        this.player.anims.play("stay-down");
+      if (charId === "player") {
+        this.player.playIdle(direction);
       }
     });
 
     // Pointer
-    this.input.on("pointerdown", (pointer: any, gameObject: any) => {
+    this.input.on("pointerdown", (pointer: any) => {
+      if (this.terminal.isVisible()) return;
       this.gridEngine.moveTo("player", { x: Math.floor(pointer.worldX / 16), y: Math.floor(pointer.worldY / 16) });
     });
+
+    // Interaction
+    this.player.on("interact", () => this.handleInteract());
 
     this.initCamera();
   }
 
   update(): void {
-    this.player.update(this.gridEngine);
+    this.player.update(this.gridEngine, this.terminal.isVisible());
 
-    if (this.player.x > 191 && this.player.x < 193 && this.player.y > 223 && this.player.y < 225) {
-      this.registry.set("playerPosition", { x: 50, y: 50 });
-      this.scene.start("moon-scene");
+    if (!this.terminal.isVisible()) {
+      if (this.player.x > 191 && this.player.x < 193 && this.player.y > 223 && this.player.y < 225) {
+        this.registry.set("playerPosition", { x: 50, y: 50 });
+        this.scene.start("moon-scene");
+      }
+    }
+  }
+
+  private handleInteract(): void {
+    if (this.terminal.isVisible()) {
+      this.terminal.hide();
+      return;
+    }
+
+    const facing = this.gridEngine.getFacingDirection("player");
+    if (facing !== Direction.UP) return;
+
+    const playerPos = this.gridEngine.getPosition("player");
+    const targetPos = { x: playerPos.x, y: playerPos.y - 1 };
+
+    const tile = this.furnitureLayer.getTileAt(targetPos.x, targetPos.y);
+    if (tile && COMPUTER_TILE_IDS.has(tile.index - 1)) {
+      this.terminal.show();
     }
   }
 
