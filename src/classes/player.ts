@@ -171,14 +171,10 @@ export class Player extends Actor {
     const landX = pos.x + dx * GRENADE_RANGE;
     const landY = pos.y + dy * GRENADE_RANGE;
 
-    this.emit("grenade", {
-      landX, landY, radius: GRENADE_BLAST_RADIUS, damage: GRENADE_DAMAGE,
-    });
     this.showGrenadeEffect(pos, landX, landY);
   }
 
   private showGrenadeEffect(from: { x: number; y: number }, lx: number, ly: number): void {
-    // Projectile arc
     const startX = from.x * 16 + 8;
     const startY = from.y * 16 + 8;
     const endX = lx * 16 + 8;
@@ -191,7 +187,7 @@ export class Player extends Actor {
       targets: proj,
       x: endX,
       y: endY,
-      duration: 300,
+      duration: 400,
       onComplete: () => {
         proj.destroy();
         // Explosion flash
@@ -203,6 +199,10 @@ export class Player extends Actor {
           scale: 1.5,
           duration: 300,
           onComplete: () => blast.destroy(),
+        });
+        // Emit damage on impact
+        this.emit("grenade-impact", {
+          landX: lx, landY: ly, radius: GRENADE_BLAST_RADIUS, damage: GRENADE_DAMAGE,
         });
       },
     });

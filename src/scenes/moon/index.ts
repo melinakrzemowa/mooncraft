@@ -145,7 +145,7 @@ export class Moon extends Scene {
     }
 
     this.player.on("shoot", (data: any) => this.handleShoot(data));
-    this.player.on("grenade", (data: any) => this.handleGrenade(data));
+    this.player.on("grenade-impact", (data: any) => this.handleGrenadeImpact(data));
 
     this.physics.add.collider(this.player, this.cratersLayer);
     this.physics.add.collider(this.player, this.landerLayer);
@@ -296,28 +296,27 @@ export class Moon extends Scene {
     }
   }
 
-  private handleGrenade(data: { landX: number; landY: number; radius: number; damage: number }): void {
+  private handleGrenadeImpact(data: { landX: number; landY: number; radius: number; damage: number }): void {
     const { landX, landY, radius, damage } = data;
-    this.time.delayedCall(300, () => {
-      for (const monster of this.monsters) {
-        if (!monster.alive) continue;
-        const mpos = this.gridEngine.getPosition(monster.id);
-        const dist = Math.max(Math.abs(mpos.x - landX), Math.abs(mpos.y - landY));
-        if (dist <= radius) {
-          const wasAlive = monster.alive;
-          monster.takeDamage(damage);
-          if (wasAlive && !monster.alive) this.player.addXp(monster.config.xpReward);
-          if (monster.alive) monster.knockback(landX, landY, 2);
-        }
-      }
 
-      const playerPos = this.gridEngine.getPosition("player");
-      const playerDist = Math.max(Math.abs(playerPos.x - landX), Math.abs(playerPos.y - landY));
-      if (playerDist <= radius) {
-        this.player.takeDamage(damage);
-        this.player.knockback(this.gridEngine, playerPos.x === landX ? 0 : (playerPos.x > landX ? 1 : -1), playerPos.y === landY ? 0 : (playerPos.y > landY ? 1 : -1), 2);
+    for (const monster of this.monsters) {
+      if (!monster.alive) continue;
+      const mpos = this.gridEngine.getPosition(monster.id);
+      const dist = Math.max(Math.abs(mpos.x - landX), Math.abs(mpos.y - landY));
+      if (dist <= radius) {
+        const wasAlive = monster.alive;
+        monster.takeDamage(damage);
+        if (wasAlive && !monster.alive) this.player.addXp(monster.config.xpReward);
+        if (monster.alive) monster.knockback(landX, landY, 2);
       }
-    });
+    }
+
+    const playerPos = this.gridEngine.getPosition("player");
+    const playerDist = Math.max(Math.abs(playerPos.x - landX), Math.abs(playerPos.y - landY));
+    if (playerDist <= radius) {
+      this.player.takeDamage(damage);
+      this.player.knockback(this.gridEngine, playerPos.x === landX ? 0 : (playerPos.x > landX ? 1 : -1), playerPos.y === landY ? 0 : (playerPos.y > landY ? 1 : -1), 2);
+    }
   }
 
   private initCamera(): void {
