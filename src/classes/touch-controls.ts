@@ -33,9 +33,9 @@ export class TouchControls {
         <button class="tc-btn tc-down" data-dir="down">&#9660;</button>
       </div>
       <div class="tc-actions">
+        <button class="tc-btn tc-action tc-interact" data-action="interact">E</button>
         <button class="tc-btn tc-action tc-shoot" data-action="shoot">&#9733;</button>
         <button class="tc-btn tc-action tc-grenade" data-action="grenade">&#9679;</button>
-        <button class="tc-btn tc-action tc-interact" data-action="interact">E</button>
       </div>
     `;
 
