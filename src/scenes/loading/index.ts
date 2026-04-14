@@ -1,4 +1,5 @@
 import { Scene } from "phaser";
+import { loadGame } from "../../classes/save-manager";
 
 export class LoadingScene extends Scene {
   private loadingText!: Phaser.GameObjects.Text;
@@ -21,6 +22,11 @@ export class LoadingScene extends Scene {
   preload(): void {
     this.load.baseURL = "assets/";
     this.load.atlas("astronaut", "spritesheets/astronaut.png", "spritesheets/astronaut_atlas.json");
+
+    this.load.spritesheet("enemy_worm", "spritesheets/enemy_worm.png", {
+      frameWidth: 16,
+      frameHeight: 16,
+    });
 
     // moon scene:
     this.load.image({
@@ -46,7 +52,16 @@ export class LoadingScene extends Scene {
   }
 
   create(): void {
-    this.loadingText.destroy(); // Remove loading text
+    this.loadingText.destroy();
+
+    // Check for existing save
+    const save = loadGame();
+    if (save) {
+      this.registry.set("saveData", save);
+      this.registry.set("playerPosition", { x: save.playerX, y: save.playerY });
+      this.scene.start(save.scene);
+      return;
+    }
 
     this.singlePlayerText = this.createButton(2080 / 2, 1440 / 2 - 100, "SINGLE PLAYER");
     this.multiPlayerText = this.createButton(2080 / 2, 1440 / 2 + 100, "MULTI PLAYER");
