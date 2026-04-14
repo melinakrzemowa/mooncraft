@@ -24,7 +24,7 @@ export const WORM_CONFIG: MonsterConfig = {
 export const BIG_WORM_CONFIG: MonsterConfig = {
   maxHealth: 80, damage: 16, attackCooldown: 3000, speed: 1,
   aggroRange: 8, xpReward: 60, spriteKey: "enemy_worm", scale: 2,
-  plasmaRange: 6, plasmaDamage: 16,
+  plasmaRange: 5, plasmaDamage: 16,
 };
 
 const WANDER_DELAY = 3000;
@@ -114,21 +114,23 @@ export class Monster {
     let plasmaShot: { damage: number; fromX: number; fromY: number; toX: number; toY: number } | null = null;
 
     if (this.aggroed && now > this.knockbackUntil) {
-      // Plasma attack -- shoots toward player in any direction
+      // Plasma attack -- targets player position, capped at max range
       if (this.config.plasmaRange > 0 && dist > 1 && now - this.lastPlasmaTime > this.config.attackCooldown) {
         this.lastPlasmaTime = now;
         this.sprite.anims.play("worm-attack");
-        // Normalize direction toward player, shoot plasmaRange tiles
-        const dx = playerPos.x - myPos.x;
-        const dy = playerPos.y - myPos.y;
-        const len = Math.sqrt(dx * dx + dy * dy);
-        const ndx = dx / len;
-        const ndy = dy / len;
+        let toX = playerPos.x;
+        let toY = playerPos.y;
+        if (dist > this.config.plasmaRange) {
+          // Out of range: shoot plasmaRange tiles toward player
+          const dx = playerPos.x - myPos.x;
+          const dy = playerPos.y - myPos.y;
+          const len = Math.sqrt(dx * dx + dy * dy);
+          toX = Math.round(myPos.x + (dx / len) * this.config.plasmaRange);
+          toY = Math.round(myPos.y + (dy / len) * this.config.plasmaRange);
+        }
         plasmaShot = {
           damage: this.config.plasmaDamage,
-          fromX: myPos.x, fromY: myPos.y,
-          toX: Math.round(myPos.x + ndx * this.config.plasmaRange),
-          toY: Math.round(myPos.y + ndy * this.config.plasmaRange),
+          fromX: myPos.x, fromY: myPos.y, toX, toY,
         };
       }
 
