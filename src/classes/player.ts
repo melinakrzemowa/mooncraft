@@ -3,12 +3,15 @@ import { Actor } from "./actor";
 
 export class Player extends Actor {
   private keySpace: Phaser.Input.Keyboard.Key;
+  private keyE: Phaser.Input.Keyboard.Key;
+  private interactPressed = false;
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0, "astronaut");
 
     // KEYS
     this.keySpace = this.scene.input.keyboard.addKey("Space");
+    this.keyE = this.scene.input.keyboard.addKey("E");
 
     // PHYSICS
     this.setCircle(8);
@@ -29,8 +32,13 @@ export class Player extends Actor {
       gridEngine.move("player", Direction.DOWN);
     }
 
-    if (this.keySpace?.isDown) {
-      console.log("some future action");
+    // E key interaction (edge-triggered)
+    if (this.keyE?.isDown && !this.interactPressed) {
+      this.interactPressed = true;
+      this.emit("interact");
+    }
+    if (this.keyE?.isUp) {
+      this.interactPressed = false;
     }
   }
 
