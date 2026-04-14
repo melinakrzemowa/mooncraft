@@ -191,7 +191,7 @@ export class Moon extends Scene {
     const endY = ty * 16 + 8;
     const dist = Math.max(Math.abs(tx - fx), Math.abs(ty - fy));
 
-    const bolt = this.add.sprite(startX, startY, "plasma_bolt");
+    const bolt = this.add.sprite(startX, startY, "plasma_bolt_sheet");
     bolt.anims.play("plasma-fly");
     bolt.setDepth(997);
 

@@ -22,7 +22,7 @@ export const WORM_CONFIG: MonsterConfig = {
 
 export const BIG_WORM_CONFIG: MonsterConfig = {
   maxHealth: 80, damage: 16, attackCooldown: 3000, speed: 1,
-  aggroRange: 8, xpReward: 60, spriteKey: "alien_big", scale: 1,
+  aggroRange: 8, xpReward: 60, spriteKey: "alien_big_sheet", scale: 1,
   plasmaRange: 3, plasmaDamage: 16,
 };
 
@@ -76,7 +76,7 @@ export class Monster {
       return;
     }
 
-    const animPrefix = this.config.spriteKey === "alien_big" ? "alien" : "worm";
+    const animPrefix = this.config.spriteKey === "alien_big_sheet" ? "alien" : "worm";
     this.startWandering();
     this.sprite.anims.play(`${animPrefix}-idle`);
 
@@ -119,7 +119,7 @@ export class Monster {
         const aligned = (dx === 0 || dy === 0) && dist <= this.config.plasmaRange && dist > 1;
         if (aligned) {
           this.lastPlasmaTime = now;
-          const ap = this.config.spriteKey === "alien_big" ? "alien" : "worm";
+          const ap = this.config.spriteKey === "alien_big_sheet" ? "alien" : "worm";
           this.sprite.anims.play(`${ap}-attack`);
           plasma = {
             damage: this.config.plasmaDamage,
@@ -170,7 +170,7 @@ export class Monster {
     const now = Date.now();
     if (now - this.lastAttackTime < this.config.attackCooldown) return 0;
     this.lastAttackTime = now;
-    const animPrefix = this.config.spriteKey === "alien_big" ? "alien" : "worm";
+    const animPrefix = this.config.spriteKey === "alien_big_sheet" ? "alien" : "worm";
     this.sprite.anims.play(`${animPrefix}-attack`);
     return this.config.damage;
   }
@@ -213,7 +213,7 @@ export class Monster {
     this.aggroed = false;
     this.lastAttackTime = 0;
     this.lastPlasmaTime = 0;
-    const animPrefix = this.config.spriteKey === "alien_big" ? "alien" : "worm";
+    const animPrefix = this.config.spriteKey === "alien_big_sheet" ? "alien" : "worm";
     this.gridEngine.setPosition(this.id, this.spawnPos);
     this.sprite.setVisible(true);
     this.sprite.anims.play(`${animPrefix}-idle`);
