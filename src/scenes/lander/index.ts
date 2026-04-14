@@ -8,8 +8,8 @@ import { TouchControls } from "../../classes/touch-controls";
 
 // Computer screen tile IDs (0-indexed)
 const COMPUTER_TILE_IDS = new Set([1, 2, 6, 7]);
-// Medkit tile IDs -- right wall tiles (tile IDs 4 and 9, at x=14 in the room)
-const MEDKIT_TILE_IDS = new Set([4, 9]);
+// Medkit tile IDs -- right wall (tile ID 9 at x=14,y=11) and left wall (tile ID 5 at x=10,y=11, tile ID 15 at x=10,y=13)
+const MEDKIT_TILE_IDS = new Set([5, 9, 15]);
 
 export class Lander extends Scene {
   private player!: Player;
