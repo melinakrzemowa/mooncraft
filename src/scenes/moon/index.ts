@@ -163,9 +163,9 @@ export class Moon extends Scene {
       if (!monster.alive) return;
       const result = monster.update(playerPos);
       if (result.melee > 0) this.player.takeDamage(result.melee);
-      if (result.plasma) {
-        this.player.takeDamage(result.plasma.damage);
-        this.showPlasmaEffect(result.plasma.fromX, result.plasma.fromY, result.plasma.toX, result.plasma.toY);
+      if (result.plasmaShot) {
+        // Damage applied on projectile arrival, not immediately
+        this.firePlasma(result.plasmaShot);
       }
       if (monster.isAggroed()) anyAggroed = true;
     });
@@ -184,32 +184,43 @@ export class Moon extends Scene {
     }
   }
 
-  private showPlasmaEffect(fx: number, fy: number, tx: number, ty: number): void {
-    const startX = fx * 16 + 8;
-    const startY = fy * 16 + 8;
-    const endX = tx * 16 + 8;
-    const endY = ty * 16 + 8;
-    const dist = Math.max(Math.abs(tx - fx), Math.abs(ty - fy));
+  private firePlasma(shot: { damage: number; fromX: number; fromY: number; toX: number; toY: number }): void {
+    const { damage, fromX, fromY, toX, toY } = shot;
+    const startX = fromX * 16 + 8;
+    const startY = fromY * 16 + 8;
+    const endX = toX * 16 + 8;
+    const endY = toY * 16 + 8;
+    const dist = Math.max(Math.abs(toX - fromX), Math.abs(toY - fromY));
 
-    const bolt = this.add.sprite(startX, startY, "plasma_bolt_sheet");
-    bolt.anims.play("plasma-fly");
+    // Plasma bolt projectile
+    const bolt = this.add.circle(startX, startY, 2.5, 0xff00ff);
     bolt.setDepth(997);
 
-    // Rotate bolt to face travel direction
-    const angle = Math.atan2(endY - startY, endX - startX);
-    bolt.setRotation(angle);
+    // Glow trail
+    const glow = this.add.circle(startX, startY, 4, 0xff00ff, 0.3);
+    glow.setDepth(996);
+
+    const travelTime = dist * 250; // 250ms per tile
 
     this.tweens.add({
-      targets: bolt,
+      targets: [bolt, glow],
       x: endX,
       y: endY,
-      duration: dist * 200, // 200ms per tile - slow and menacing
+      duration: travelTime,
       onComplete: () => {
+        // Check if player is at or near the target tile when bolt arrives
+        const playerPos = this.gridEngine.getPosition("player");
+        const hitDist = Math.max(Math.abs(playerPos.x - toX), Math.abs(playerPos.y - toY));
+        if (hitDist <= 0) {
+          this.player.takeDamage(damage);
+        }
+
         // Impact flash
-        const flash = this.add.circle(endX, endY, 4, 0xff00ff, 0.6);
+        const flash = this.add.circle(endX, endY, 5, 0xff00ff, 0.6);
         flash.setDepth(997);
         this.tweens.add({ targets: flash, alpha: 0, scale: 2, duration: 200, onComplete: () => flash.destroy() });
         bolt.destroy();
+        glow.destroy();
       },
     });
   }
@@ -231,30 +242,36 @@ export class Moon extends Scene {
     clearSave();
     this.registry.set("saveData", undefined);
 
+    // Position relative to player (camera centers on player)
+    const px = this.player.x;
+    const py = this.player.y;
     const cam = this.cameras.main;
-    const cx = cam.scrollX + cam.width / cam.zoom / 2;
-    const cy = cam.scrollY + cam.height / cam.zoom / 2;
-    const vw = cam.width / cam.zoom;
-    const vh = cam.height / cam.zoom;
+    const halfW = cam.width / cam.zoom / 2;
+    const halfH = cam.height / cam.zoom / 2;
 
-    const overlay = this.add.rectangle(cx, cy, vw, vh, 0x000000, 0.7);
+    const overlay = this.add.rectangle(px, py, halfW * 2 + 20, halfH * 2 + 20, 0x000000, 0.7);
     overlay.setDepth(1500);
 
-    const deathText = this.add.text(cx, cy - 8, "YOU DIED", {
+    const deathText = this.add.text(px, py - 8, "YOU DIED", {
       fontFamily: "ThaleahFat", fontSize: "12px", color: "#cc0000", resolution: 4,
     });
     deathText.setOrigin(0.5);
     deathText.setDepth(1501);
 
-    const restartText = this.add.text(cx, cy + 4, "click to respawn", {
+    const restartText = this.add.text(px, py + 4, "click to respawn", {
       fontFamily: "ThaleahFat", fontSize: "5px", color: "#888888", resolution: 4,
     });
     restartText.setOrigin(0.5);
     restartText.setDepth(1501);
 
-    this.input.once("pointerdown", () => {
+    // Respawn on any click or key
+    const respawn = () => {
       this.registry.set("playerPosition", { x: 49, y: 51 });
       this.scene.restart();
+    };
+    this.time.delayedCall(500, () => {
+      this.input.once("pointerdown", respawn);
+      this.input.keyboard.once("keydown", respawn);
     });
   }
 

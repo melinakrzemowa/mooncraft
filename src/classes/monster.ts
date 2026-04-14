@@ -22,7 +22,7 @@ export const WORM_CONFIG: MonsterConfig = {
 
 export const BIG_WORM_CONFIG: MonsterConfig = {
   maxHealth: 80, damage: 16, attackCooldown: 3000, speed: 1,
-  aggroRange: 8, xpReward: 60, spriteKey: "alien_big_sheet", scale: 1,
+  aggroRange: 8, xpReward: 60, spriteKey: "enemy_worm", scale: 2,
   plasmaRange: 3, plasmaDamage: 16,
 };
 
@@ -59,6 +59,7 @@ export class Monster {
 
     this.sprite = scene.add.sprite(0, 0, config.spriteKey);
     if (config.scale !== 1) this.sprite.setScale(config.scale);
+    if (config.plasmaRange > 0) this.sprite.setTint(0x44ff66); // Green tint for big worms
     this.initAnimations();
 
     this.healthBar = scene.add.graphics();
@@ -76,7 +77,7 @@ export class Monster {
       return;
     }
 
-    const animPrefix = this.config.spriteKey === "alien_big_sheet" ? "alien" : "worm";
+    const animPrefix = "worm";
     this.startWandering();
     this.sprite.anims.play(`${animPrefix}-idle`);
 
@@ -93,8 +94,8 @@ export class Monster {
     });
   }
 
-  update(playerPos: { x: number; y: number }): { melee: number; plasma: { damage: number; fromX: number; fromY: number; toX: number; toY: number } | null } {
-    if (!this.alive) return { melee: 0, plasma: null };
+  update(playerPos: { x: number; y: number }): { melee: number; plasmaShot: { damage: number; fromX: number; fromY: number; toX: number; toY: number } | null } {
+    if (!this.alive) return { melee: 0, plasmaShot: null };
 
     const myPos = this.gridEngine.getPosition(this.id);
     const dist = Math.max(Math.abs(myPos.x - playerPos.x), Math.abs(myPos.y - playerPos.y));
@@ -109,7 +110,7 @@ export class Monster {
     }
 
     let melee = 0;
-    let plasma: { damage: number; fromX: number; fromY: number; toX: number; toY: number } | null = null;
+    let plasmaShot: { damage: number; fromX: number; fromY: number; toX: number; toY: number } | null = null;
 
     if (this.aggroed && now > this.knockbackUntil) {
       // Plasma attack -- fires in a line if player is aligned and in range
@@ -119,9 +120,8 @@ export class Monster {
         const aligned = (dx === 0 || dy === 0) && dist <= this.config.plasmaRange && dist > 1;
         if (aligned) {
           this.lastPlasmaTime = now;
-          const ap = this.config.spriteKey === "alien_big_sheet" ? "alien" : "worm";
-          this.sprite.anims.play(`${ap}-attack`);
-          plasma = {
+          this.sprite.anims.play("worm-attack");
+          plasmaShot = {
             damage: this.config.plasmaDamage,
             fromX: myPos.x, fromY: myPos.y,
             toX: playerPos.x, toY: playerPos.y,
@@ -131,13 +131,13 @@ export class Monster {
 
       if (dist <= 1) {
         melee = this.tryAttack();
-      } else if (!plasma) {
+      } else if (!plasmaShot) {
         this.chasePlayer(playerPos);
       }
     }
 
     this.drawHealthBar();
-    return { melee, plasma };
+    return { melee, plasmaShot };
   }
 
   takeDamage(amount: number): void {
@@ -170,7 +170,7 @@ export class Monster {
     const now = Date.now();
     if (now - this.lastAttackTime < this.config.attackCooldown) return 0;
     this.lastAttackTime = now;
-    const animPrefix = this.config.spriteKey === "alien_big_sheet" ? "alien" : "worm";
+    const animPrefix = "worm";
     this.sprite.anims.play(`${animPrefix}-attack`);
     return this.config.damage;
   }
@@ -213,7 +213,7 @@ export class Monster {
     this.aggroed = false;
     this.lastAttackTime = 0;
     this.lastPlasmaTime = 0;
-    const animPrefix = this.config.spriteKey === "alien_big_sheet" ? "alien" : "worm";
+    const animPrefix = "worm";
     this.gridEngine.setPosition(this.id, this.spawnPos);
     this.sprite.setVisible(true);
     this.sprite.anims.play(`${animPrefix}-idle`);
@@ -223,7 +223,13 @@ export class Monster {
   private flashRed(): void {
     this.sprite.setTint(0xff0000);
     this.scene.time.delayedCall(150, () => {
-      if (this.alive) this.sprite.clearTint();
+      if (this.alive) {
+        if (this.config.plasmaRange > 0) {
+          this.sprite.setTint(0x44ff66);
+        } else {
+          this.sprite.clearTint();
+        }
+      }
     });
   }
 

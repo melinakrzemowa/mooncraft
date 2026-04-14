@@ -69,9 +69,6 @@ export class Player extends Actor {
     this.keyF = this.scene.input.keyboard.addKey("F");
     this.keySpace = this.scene.input.keyboard.addKey("SPACE");
 
-    // PHYSICS
-    this.setCircle(8);
-
     // ANIMATIONS
     this.initAnimations();
 

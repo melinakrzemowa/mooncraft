@@ -53,7 +53,6 @@ export class LoadingScene extends Scene {
 
   create(): void {
     this.loadingText.destroy();
-    this.generateSprites();
 
     // Check for existing save
     const save = loadGame();
@@ -80,94 +79,6 @@ export class LoadingScene extends Scene {
     this.scene.start("multi-scene");
   }
 
-  generateSprites(): void {
-    // Big alien sprite (32x32, 8 frames: 4 idle + 4 attack)
-    const alienGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    const aw = 32, ah = 32;
-    for (let frame = 0; frame < 8; frame++) {
-      const ox = frame * aw;
-      const isAttack = frame >= 4;
-      const wobble = (frame % 4) * 2 - 3;
-
-      alienGfx.fillStyle(0x226633);
-      alienGfx.fillEllipse(ox + 16, 18 + wobble * 0.3, 22, 20);
-      alienGfx.fillStyle(0x33aa44);
-      alienGfx.fillEllipse(ox + 16, 17 + wobble * 0.3, 16, 14);
-      alienGfx.fillStyle(0xffff00);
-      alienGfx.fillCircle(ox + 10 + wobble * 0.2, 12, 4);
-      alienGfx.fillCircle(ox + 22 - wobble * 0.2, 12, 4);
-      alienGfx.fillStyle(0x000000);
-      alienGfx.fillCircle(ox + 11 + wobble * 0.3, 12, 2);
-      alienGfx.fillCircle(ox + 21 - wobble * 0.3, 12, 2);
-      alienGfx.fillStyle(0x114422);
-      alienGfx.fillRect(ox + 8, 22 + wobble * 0.2, 3, isAttack ? 6 : 3);
-      alienGfx.fillRect(ox + 21, 22 + wobble * 0.2, 3, isAttack ? 6 : 3);
-      alienGfx.lineStyle(1, 0x33aa44);
-      alienGfx.lineBetween(ox + 10, 6, ox + 6 + wobble, 1);
-      alienGfx.lineBetween(ox + 22, 6, ox + 26 - wobble, 1);
-      alienGfx.fillStyle(isAttack ? 0xff3333 : 0x66ff66);
-      alienGfx.fillCircle(ox + 6 + wobble, 1, 2);
-      alienGfx.fillCircle(ox + 26 - wobble, 1, 2);
-      if (isAttack) {
-        alienGfx.fillStyle(0xff00ff, 0.3);
-        alienGfx.fillCircle(ox + 16, 26, 5 + (frame % 2) * 2);
-      }
-    }
-    alienGfx.generateTexture("alien_big_sheet", aw * 8, ah);
-    alienGfx.destroy();
-
-    // Add spritesheet frame data to the generated texture
-    const alienTex = this.textures.get("alien_big_sheet");
-    for (let i = 0; i < 8; i++) {
-      alienTex.add(i, 0, i * aw, 0, aw, ah);
-    }
-
-    // Plasma bolt sprite (8x8, 4 frames)
-    const plasmaGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    for (let frame = 0; frame < 4; frame++) {
-      const ox = frame * 8;
-      const pulse = 1 + (frame % 2) * 0.5;
-      plasmaGfx.fillStyle(0xff00ff, 0.3);
-      plasmaGfx.fillCircle(ox + 4, 4, 3.5 * pulse);
-      plasmaGfx.fillStyle(0xff44ff);
-      plasmaGfx.fillCircle(ox + 4, 4, 2 * pulse);
-      plasmaGfx.fillStyle(0xffffff);
-      plasmaGfx.fillCircle(ox + 4, 4, 1);
-    }
-    plasmaGfx.generateTexture("plasma_bolt_sheet", 32, 8);
-    plasmaGfx.destroy();
-
-    const plasmaTex = this.textures.get("plasma_bolt_sheet");
-    for (let i = 0; i < 4; i++) {
-      plasmaTex.add(i, 0, i * 8, 0, 8, 8);
-    }
-
-    // Register animations
-    this.anims.create({
-      key: "alien-idle",
-      frames: [{ key: "alien_big_sheet", frame: 0 }, { key: "alien_big_sheet", frame: 1 }, { key: "alien_big_sheet", frame: 2 }, { key: "alien_big_sheet", frame: 3 }],
-      frameRate: 4,
-      repeat: -1,
-    });
-    this.anims.create({
-      key: "alien-walk",
-      frames: [{ key: "alien_big_sheet", frame: 0 }, { key: "alien_big_sheet", frame: 1 }, { key: "alien_big_sheet", frame: 2 }, { key: "alien_big_sheet", frame: 3 }],
-      frameRate: 6,
-      repeat: -1,
-    });
-    this.anims.create({
-      key: "alien-attack",
-      frames: [{ key: "alien_big_sheet", frame: 4 }, { key: "alien_big_sheet", frame: 5 }, { key: "alien_big_sheet", frame: 6 }, { key: "alien_big_sheet", frame: 7 }],
-      frameRate: 6,
-      repeat: 0,
-    });
-    this.anims.create({
-      key: "plasma-fly",
-      frames: [{ key: "plasma_bolt_sheet", frame: 0 }, { key: "plasma_bolt_sheet", frame: 1 }, { key: "plasma_bolt_sheet", frame: 2 }, { key: "plasma_bolt_sheet", frame: 3 }],
-      frameRate: 8,
-      repeat: -1,
-    });
-  }
 
   createButton(x: number, y: number, text: string): Phaser.GameObjects.Text {
     const button = this.add.text(x, y, text, { font: "128pt ThaleahFat", color: "#FFFFFF", align: "center" });
