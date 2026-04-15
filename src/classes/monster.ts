@@ -136,6 +136,12 @@ export class Monster {
 
       if (dist <= 1) {
         melee = this.tryAttack();
+        // Move randomly around the player even when in melee range
+        if (!this.gridEngine.isMoving(this.id)) {
+          const directions = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT];
+          const dir = directions[Math.floor(Math.random() * directions.length)];
+          this.gridEngine.move(this.id, dir);
+        }
       } else if (!plasmaShot) {
         this.chasePlayer(playerPos);
       }

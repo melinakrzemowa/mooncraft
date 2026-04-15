@@ -24,10 +24,12 @@ export class Player extends Actor {
   private keyE: Phaser.Input.Keyboard.Key;
   private keyR: Phaser.Input.Keyboard.Key;
   private keyF: Phaser.Input.Keyboard.Key;
+  private keyX: Phaser.Input.Keyboard.Key;
   private keySpace: Phaser.Input.Keyboard.Key;
   private interactPressed = false;
   private shootPressed = false;
   private grenadePressed = false;
+  private trackerPressed = false;
   private lastShootTime = 0;
   private lastGrenadeTime = 0;
 
@@ -68,6 +70,7 @@ export class Player extends Actor {
     this.keyE = this.scene.input.keyboard.addKey("E");
     this.keyR = this.scene.input.keyboard.addKey("R");
     this.keyF = this.scene.input.keyboard.addKey("F");
+    this.keyX = this.scene.input.keyboard.addKey("X");
     this.keySpace = this.scene.input.keyboard.addKey("SPACE");
 
     // ANIMATIONS
@@ -140,6 +143,17 @@ export class Player extends Actor {
     }
     if (grenadeUp) {
       this.grenadePressed = false;
+    }
+
+    // X / touch tracker (edge-triggered)
+    const trackerDown = this.keyX?.isDown || t?.tracker;
+    const trackerUp = this.keyX?.isUp && !t?.tracker;
+    if (trackerDown && !this.trackerPressed) {
+      this.trackerPressed = true;
+      this.emit("tracker");
+    }
+    if (trackerUp) {
+      this.trackerPressed = false;
     }
 
     this.drawHealthBar();

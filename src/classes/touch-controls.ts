@@ -6,6 +6,7 @@ export interface TouchState {
   shoot: boolean;
   interact: boolean;
   grenade: boolean;
+  tracker: boolean;
 }
 
 const isTouchDevice = () => "ontouchstart" in window || navigator.maxTouchPoints > 0;
@@ -13,7 +14,7 @@ const isTouchDevice = () => "ontouchstart" in window || navigator.maxTouchPoints
 export class TouchControls {
   public state: TouchState = {
     up: false, down: false, left: false, right: false,
-    shoot: false, interact: false, grenade: false,
+    shoot: false, interact: false, grenade: false, tracker: false,
   };
 
   private container: HTMLDivElement;
@@ -23,19 +24,26 @@ export class TouchControls {
     this.container = document.createElement("div");
     this.container.id = "touch-controls";
     this.container.innerHTML = `
-      <div class="tc-dpad">
-        <button class="tc-btn tc-up" data-dir="up">&#9650;</button>
-        <div class="tc-mid-row">
-          <button class="tc-btn tc-left" data-dir="left">&#9664;</button>
-          <div class="tc-center"></div>
-          <button class="tc-btn tc-right" data-dir="right">&#9654;</button>
+      <div class="tc-left-col">
+        <div class="tc-utils">
+          <button class="tc-btn tc-action tc-interact" data-action="interact">
+            <img src="https://unpkg.com/lucide-static@latest/icons/scan-search.svg" alt="interact" />
+          </button>
+          <button class="tc-btn tc-action tc-tracker" data-action="tracker">
+            <img src="https://unpkg.com/lucide-static@latest/icons/compass.svg" alt="tracker" />
+          </button>
         </div>
-        <button class="tc-btn tc-down" data-dir="down">&#9660;</button>
+        <div class="tc-dpad">
+          <button class="tc-btn tc-up" data-dir="up">&#9650;</button>
+          <div class="tc-mid-row">
+            <button class="tc-btn tc-left" data-dir="left">&#9664;</button>
+            <div class="tc-center"></div>
+            <button class="tc-btn tc-right" data-dir="right">&#9654;</button>
+          </div>
+          <button class="tc-btn tc-down" data-dir="down">&#9660;</button>
+        </div>
       </div>
       <div class="tc-actions">
-        <button class="tc-btn tc-action tc-interact" data-action="interact">
-          <img src="https://unpkg.com/lucide-static@latest/icons/scan-search.svg" alt="interact" />
-        </button>
         <button class="tc-btn tc-action tc-shoot" data-action="shoot">
           <img src="https://unpkg.com/lucide-static@latest/icons/crosshair.svg" alt="shoot" />
         </button>
@@ -87,7 +95,7 @@ export class TouchControls {
     }
 
     // Action buttons
-    const actions = ["shoot", "interact", "grenade"] as const;
+    const actions = ["shoot", "interact", "grenade", "tracker"] as const;
     for (const action of actions) {
       const btn = this.container.querySelector(`[data-action="${action}"]`) as HTMLElement;
       if (!btn) continue;
@@ -124,6 +132,24 @@ export class TouchControls {
         z-index: 10000;
         user-select: none;
         -webkit-user-select: none;
+      }
+
+      .tc-left-col {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-end;
+        flex: 1;
+        pointer-events: auto;
+      }
+
+      .tc-utils {
+        display: flex;
+        gap: 6px;
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        pointer-events: auto;
       }
 
       .tc-dpad {
@@ -205,6 +231,21 @@ export class TouchControls {
 
       .tc-grenade:active {
         background: rgba(255, 140, 0, 0.5);
+      }
+
+      .tc-tracker {
+        background: rgba(0, 150, 0, 0.3);
+        border-color: rgba(50, 255, 50, 0.6);
+      }
+
+      .tc-tracker:active {
+        background: rgba(50, 255, 50, 0.5);
+      }
+
+      .tc-utils .tc-action {
+        width: 64px;
+        height: 64px;
+        padding: 16px;
       }
 
       .tc-interact {

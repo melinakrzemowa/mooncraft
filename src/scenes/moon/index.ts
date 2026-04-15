@@ -5,16 +5,21 @@ import { Monster, WORM_CONFIG, BIG_WORM_CONFIG, MonsterConfig } from "../../clas
 import { saveGame, clearSave, SaveData } from "../../classes/save-manager";
 import { TouchControls } from "../../classes/touch-controls";
 import { getEffectivePosition } from "../../classes/grid-utils";
+import { LanderTracker } from "../../classes/lander-tracker";
 
-// Generate small worm spawns across the map, avoiding lander area
+// Generate small worm spawns across the map - ~1 per 10x10 area, multiple per cell
 function generateSmallSpawns(): { x: number; y: number }[] {
   const spawns: { x: number; y: number }[] = [];
-  const rng = (min: number, max: number) => Math.floor(min + (max - min) * ((Math.sin(spawns.length * 127.1 + 311.7) * 0.5 + 0.5)));
-  for (let gx = 0; gx < 10; gx++) {
-    for (let gy = 0; gy < 5; gy++) {
-      const x = gx * 10 + 3 + rng(0, 6);
-      const y = gy * 10 + 3 + rng(0, 6);
-      if (x >= 45 && x <= 55 && y >= 45 && y <= 55) continue;
+  // Deterministic pseudo-random from seed
+  let seed = 42;
+  const rng = () => { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; };
+
+  for (let gx = 0; gx < 20; gx++) {
+    for (let gy = 0; gy < 10; gy++) {
+      const x = Math.floor(gx * 5 + 1 + rng() * 3);
+      const y = Math.floor(gy * 5 + 1 + rng() * 3);
+      // Skip lander area (wider margin)
+      if (x >= 43 && x <= 57 && y >= 43 && y <= 55) continue;
       if (x < 2 || x > 97 || y < 2 || y > 47) continue;
       spawns.push({ x, y });
     }
@@ -44,6 +49,7 @@ export class Moon extends Scene {
   private gridEngine!: GridEngine;
   private monsters: Monster[] = [];
   private dead = false;
+  private tracker!: LanderTracker;
 
   constructor() {
     super("moon-scene");
@@ -148,6 +154,17 @@ export class Moon extends Scene {
     this.player.on("shoot", (data: any) => this.handleShoot(data));
     this.player.on("grenade-impact", (data: any) => this.handleGrenadeImpact(data));
 
+    // Lander tracker
+    this.tracker = new LanderTracker(this);
+    this.player.on("tracker", () => {
+      if (this.tracker.isVisible()) {
+        this.tracker.hide();
+      } else {
+        const pos = getEffectivePosition(this.gridEngine, "player");
+        this.tracker.show(pos.x, pos.y);
+      }
+    });
+
     this.physics.add.collider(this.player, this.cratersLayer);
     this.physics.add.collider(this.player, this.landerLayer);
     this.initCamera();
@@ -155,7 +172,7 @@ export class Moon extends Scene {
 
   update(): void {
     if (this.dead) return;
-    this.player.update(this.gridEngine);
+    this.player.update(this.gridEngine, this.tracker.isVisible());
 
     const playerPos = getEffectivePosition(this.gridEngine, "player");
     let anyAggroed = false;
