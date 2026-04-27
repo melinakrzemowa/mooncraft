@@ -69,7 +69,7 @@ jobs:
           echo "${{ secrets.PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           cat >> ~/.ssh/config << 'EOF'
-          Host ssh.melinakrzemowa.pl
+          Host airssh.melinakrzemowa.pl
             ProxyCommand cloudflared access ssh --hostname %h
             StrictHostKeyChecking no
             UserKnownHostsFile /dev/null
@@ -79,11 +79,14 @@ jobs:
         run: |
           VERSION=${{ steps.previoustag.outputs.tag }}-${{ steps.get_hash.outputs.HASH }}
 
-          scp docker-compose.yml ${{ secrets.SSH_USERNAME }}@ssh.melinakrzemowa.pl:/home/${{ secrets.SSH_USERNAME }}/deploy/mooncraft/
+          DEPLOY_DIR=/Users/${{ secrets.SSH_USERNAME }}/services/mooncraft.melinakrzemowa.pl
+          SSH_TARGET=${{ secrets.SSH_USERNAME }}@airssh.melinakrzemowa.pl
 
-          ssh ${{ secrets.SSH_USERNAME }}@ssh.melinakrzemowa.pl << DEPLOY
-            sudo mv /home/${{ secrets.SSH_USERNAME }}/deploy/mooncraft/docker-compose.yml /var/www/mooncraft.melinakrzemowa.pl/docker-compose.yml
-            cd /var/www/mooncraft.melinakrzemowa.pl
+          scp docker-compose.yml $SSH_TARGET:$DEPLOY_DIR/docker-compose.yml
+
+          ssh $SSH_TARGET << DEPLOY
+            set -e
+            cd $DEPLOY_DIR
             docker pull ghcr.io/melinakrzemowa/mooncraft:${VERSION}
             VERSION=${VERSION} docker compose up -d
           DEPLOY
