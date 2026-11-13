@@ -1,3 +1,6 @@
 node_modules
 dist
 .DS_Store
+
+# Claude Code local settings: "don't ask again" saves approved commands verbatim, secrets included
+.claude/settings.local.json
